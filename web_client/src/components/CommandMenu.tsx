@@ -7,14 +7,13 @@ import { Search, Home, LayoutDashboard, ShieldCheck, Database, Award, UserCog, C
 import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
-import { UserRole } from "@/types/models";
+import { UserRole, ExecomMember } from "@/types/models";
 import "./command-menu.css";
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<ExecomMember[]>([]);
   const [view, setView] = useState<"main" | "assignRole">("main");
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   const router = useRouter();
   const { user } = useAuthStore();
 
@@ -35,7 +34,7 @@ export function CommandMenu() {
   useEffect(() => {
     if (open && isAdmin && users.length === 0) {
       getDocs(collection(db, "users")).then((snap) => {
-        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() } as ExecomMember)));
       });
     }
   }, [open, isAdmin, users.length]);
@@ -46,7 +45,7 @@ export function CommandMenu() {
     command();
   };
 
-  const assignRole = async (targetUser: any, newRole: string, designation: string) => {
+  const assignRole = async (targetUser: ExecomMember, newRole: string, designation: string) => {
     if (!isAdmin) return;
     try {
       // 1. Update whitelist so it persists
@@ -77,7 +76,7 @@ export function CommandMenu() {
         <Command>
           <div className="cmdk-header">
             <Search size={18} className="cmdk-search-icon" />
-            <Command.Input placeholder={view === "main" ? "Type a command or search..." : `Assign role to ${selectedUser?.fullName}...`} autoFocus />
+            <Command.Input placeholder={view === "main" ? "Type a command or search..." : "Assign role to a user..."} autoFocus />
             <div className="cmdk-esc" onClick={() => {
               if (view !== "main") setView("main");
               else setOpen(false);

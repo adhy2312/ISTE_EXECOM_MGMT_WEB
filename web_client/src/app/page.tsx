@@ -45,46 +45,74 @@ export default function HomePage() {
   // ── PUBLIC LANDING PAGE ──────────────────────────────────────────────────
   if (!user) {
     return (
-      <div ref={containerRef} style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <div ref={containerRef} style={{ 
+        minHeight: "100dvh", 
+        display: "flex", 
+        flexDirection: "column", 
+        backgroundColor: "#05050A", 
+        color: "#ffffff",
+        backgroundImage: "radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8))",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        {/* Animated background stars/grid effect */}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 0,
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          transform: "perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px)",
+          opacity: 0.5,
+        }}></div>
+
         {/* Header */}
-        <header style={{ padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <header style={{ position: "relative", zIndex: 10, padding: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, objectFit: "contain" }} />
-            <h1 className="outfit-font" style={{ fontSize: 18, fontWeight: 800 }}>ISTE SC MBCET</h1>
+            <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(255,255,255,0.8))" }} />
+            <h1 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#fff" }}>ISTE<span style={{color: "#6366F1"}}>SC</span></h1>
           </div>
-          <Link href="/login" style={{
-            background: "var(--bg-elevated)", border: "1px solid var(--border-strong)",
-            padding: "8px 16px", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "var(--text-primary)",
-            textDecoration: "none", boxShadow: "var(--shadow-sm)"
-          }}>
-            Log In
-          </Link>
         </header>
 
         {/* Hero */}
-        <main style={{ flex: 1, padding: "60px 20px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+        <main style={{ position: "relative", zIndex: 10, flex: 1, padding: "60px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
           <div className="stagger-in" style={{
-            background: "var(--brand-glow)", color: "var(--brand)",
-            padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-            textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 20,
+            background: "rgba(99, 102, 241, 0.1)", color: "#818CF8",
+            border: "1px solid rgba(99, 102, 241, 0.3)",
+            padding: "8px 16px", borderRadius: 30, fontSize: 11, fontWeight: 700,
+            textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 32,
+            boxShadow: "0 0 20px rgba(99, 102, 241, 0.2)",
+            backdropFilter: "blur(10px)"
           }}>
-            Executive Management System
+            SYSTEM INITIATED // V2.0
           </div>
-          <h2 className="stagger-in" style={{ fontFamily: "'Playfair Display', serif", fontSize: 48, lineHeight: 1.1, fontWeight: 700, color: "var(--text-primary)", marginBottom: 20 }}>
-            Where ideas<br />become <span style={{ color: "var(--accent)" }}>actions.</span>
+          
+          <h2 className="stagger-in outfit-font" style={{ fontSize: "clamp(40px, 8vw, 64px)", lineHeight: 1.1, fontWeight: 900, marginBottom: 24, letterSpacing: "-0.02em", color: "#ffffff" }}>
+            ORCHESTRATE THE <br />
+            <span style={{ 
+              background: "linear-gradient(135deg, #818CF8 0%, #C084FC 100%)", 
+              WebkitBackgroundClip: "text", 
+              WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 0 30px rgba(192, 132, 252, 0.4))"
+            }}>FUTURE.</span>
           </h2>
-          <p className="stagger-in" style={{ fontSize: 16, color: "var(--text-secondary)", maxWidth: 400, lineHeight: 1.6, marginBottom: 40 }}>
-            The internal operating system for the Executive Committee and Chapter Administration.
+          
+          <p className="stagger-in" style={{ fontSize: 16, color: "rgba(255,255,255,0.6)", maxWidth: 500, lineHeight: 1.6, marginBottom: 48, fontWeight: 300, letterSpacing: "0.02em" }}>
+            Advanced operational matrix for the ISTE Executive Committee. Authenticate to establish connection to the core network.
           </p>
 
           <Link href="/login" className="stagger-in" style={{
-            background: "linear-gradient(135deg, var(--brand), #4338CA)",
-            color: "white", padding: "16px 32px", borderRadius: 16, fontSize: 15, fontWeight: 600,
-            textDecoration: "none", display: "flex", alignItems: "center", gap: 8,
-            boxShadow: "0 8px 24px rgba(55, 48, 163, 0.25)"
+            position: "relative",
+            background: "rgba(15, 15, 25, 0.6)",
+            color: "white", padding: "18px 40px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+            textDecoration: "none", display: "flex", alignItems: "center", gap: 12,
+            border: "1px solid rgba(99, 102, 241, 0.5)",
+            boxShadow: "0 0 30px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(99, 102, 241, 0.1)",
+            backdropFilter: "blur(12px)",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            transition: "all 0.3s ease"
           }}>
-            Access Member Portal <ArrowRight size={18} />
+            Access ExeCom Portal <ArrowRight size={18} style={{ color: "#818CF8" }} />
           </Link>
         </main>
       </div>

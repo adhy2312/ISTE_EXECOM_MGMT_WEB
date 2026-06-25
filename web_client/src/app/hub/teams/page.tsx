@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
-import { Team, UserRole } from "@/types/models";
+import { Team, UserRole, ExecomMember } from "@/types/models";
 import { Users, UserPlus, Shield, Plus, X, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -12,7 +12,7 @@ export default function TeamsPage() {
   const { user, isLoading: authLoading } = useAuthStore();
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<ExecomMember[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [isCreating, setIsCreating] = useState(false);
@@ -30,24 +30,25 @@ export default function TeamsPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
+
+    const fetchData = async () => {
+      try {
+        const [teamsSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "teams")),
+          getDocs(collection(db, "users"))
+        ]);
+        
+        setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
+        setAllUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as ExecomMember)));
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+      }
+    };
+
     fetchData();
   }, [isAdmin]);
-
-  const fetchData = async () => {
-    try {
-      const [teamsSnap, usersSnap] = await Promise.all([
-        getDocs(collection(db, "teams")),
-        getDocs(collection(db, "users"))
-      ]);
-      
-      setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
-      setAllUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
-    }
-  };
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +65,7 @@ export default function TeamsPage() {
       setTeams([...teams, { id: docRef.id, ...teamData }]);
       setIsCreating(false);
       setNewTeam({ name: "", description: "" });
-    } catch (e) {
+    } catch {
       alert("Failed to create team");
     }
   };
@@ -82,7 +83,7 @@ export default function TeamsPage() {
     if (!team) return;
 
     try {
-      const updates: any = {};
+      const updates: Partial<Team> = {};
       if (type === 'leader') {
         updates.leaderId = userId;
       } else {
@@ -96,7 +97,7 @@ export default function TeamsPage() {
       // Update local state
       setTeams(teams.map(t => t.id === teamId ? { ...t, ...updates } : t));
       setActiveModal(null);
-    } catch (e) {
+    } catch {
       alert("Failed to assign user");
     }
   };
