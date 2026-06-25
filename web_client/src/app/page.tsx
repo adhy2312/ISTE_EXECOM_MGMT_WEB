@@ -5,14 +5,17 @@ import gsap from "gsap";
 import { useAuthStore } from "@/store/auth";
 import { useDashboardStore } from "@/store/dashboard";
 import { useTasksStore } from "@/store/tasks";
-import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight } from "lucide-react";
+import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { UserRole } from "@/types/models";
 
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuthStore();
   const { events, activities, isLoading: dashLoading, fetchDashboardData } = useDashboardStore();
   const { tasks, isLoading: tasksLoading, fetchTasks } = useTasksStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
 
   useEffect(() => {
     if (user) {
@@ -145,24 +148,43 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Quick Actions (General Members) */}
+      {/* Quick Actions */}
       <div className="stagger-in" style={{ marginBottom: "2.5rem" }}>
-        <Link href="/points" style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))",
-          border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 16, padding: "20px",
-          textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
-        }}>
-          <div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#D97706", display: "flex", alignItems: "center", gap: 8 }}>
-              <Activity size={18} /> Submit Point Request
-            </h3>
-            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
-              Log your contributions and earn Core XP.
-            </p>
-          </div>
-          <ChevronRight color="#D97706" />
-        </Link>
+        {isAdmin ? (
+          <Link href="/executive" style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "linear-gradient(135deg, rgba(67, 56, 202, 0.1), rgba(67, 56, 202, 0.05))",
+            border: "1px solid rgba(67, 56, 202, 0.3)", borderRadius: 16, padding: "20px",
+            textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
+          }}>
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#4338CA", display: "flex", alignItems: "center", gap: 8 }}>
+                <ShieldCheck size={18} /> Point Monitor & Approvals
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
+                Review and approve member contributions.
+              </p>
+            </div>
+            <ChevronRight color="#4338CA" />
+          </Link>
+        ) : (
+          <Link href="/points" style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))",
+            border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 16, padding: "20px",
+            textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
+          }}>
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#D97706", display: "flex", alignItems: "center", gap: 8 }}>
+                <Activity size={18} /> Submit Point Request
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
+                Log your contributions and earn Core XP.
+              </p>
+            </div>
+            <ChevronRight color="#D97706" />
+          </Link>
+        )}
       </div>
 
       {/* Upcoming Events */}

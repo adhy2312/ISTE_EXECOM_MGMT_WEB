@@ -45,7 +45,7 @@ const emptyWhitelistForm = { email: "", role: UserRole.generalMember, designatio
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
-  const { members, isLoading: membersLoading, fetchMembers, updateMemberProfile } = useMembersStore();
+  const { members, teams, fetchMembers, fetchTeams, createTeam, deleteTeam, updateMemberProfile } = useMembersStore();
   const { allowedUsers, auditLogs, isLoading: adminLoading, subscribeToAllowedUsers, fetchAuditLogs, addAllowedUser, updateAllowedUser, removeAllowedUser } = useAdminStore();
   const { allEvaluations, allContributions, fetchAllEvaluations, fetchMemberContributions, updateEvaluation, updateContributionStatus } = useEvaluationStore();
   const router = useRouter();
@@ -56,6 +56,10 @@ export default function SettingsPage() {
   // Builder state
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ExecomMember>>({});
+  const [newTeamName, setNewTeamName] = useState("");
+  const [newTeamDesc, setNewTeamDesc] = useState("");
+  const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
+  const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
 
   // Whitelist/Access state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -75,10 +79,11 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!isAdmin) { router.replace("/"); return; }
     fetchMembers();
+    fetchTeams();
     fetchAllEvaluations();
     const unsub = subscribeToAllowedUsers();
     return () => unsub();
-  }, [isAdmin, router, fetchMembers, fetchAllEvaluations, subscribeToAllowedUsers]);
+  }, [isAdmin, router, fetchMembers, fetchTeams, fetchAllEvaluations, subscribeToAllowedUsers]);
 
   useEffect(() => {
     if (activeTab === "audit") fetchAuditLogs();
@@ -95,20 +100,6 @@ export default function SettingsPage() {
   }, [activeTab]);
 
   const handleLogout = async () => { await logout(); router.replace("/login"); };
-
-  // ── Builder handlers ──
-  const startEditMember = (m: ExecomMember) => {
-    setEditingMemberId(m.id);
-    setEditForm({ fullName: m.fullName, branchBatch: m.branchBatch, contact: m.contact, department: m.department, designation: m.designation, areasOfExpertise: m.areasOfExpertise });
-  };
-  const saveEditMember = async () => {
-    if (!editingMemberId) return;
-    try {
-      await updateMemberProfile(editingMemberId, editForm);
-      toast.success("Member profile updated!");
-      setEditingMemberId(null);
-    } catch { toast.error("Failed to update profile."); }
-  };
 
   // ── Privilege handlers ──
   const handleRoleChange = async (m: ExecomMember, newRole: UserRole) => {
@@ -235,66 +226,137 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {membersLoading ? (
-              <div style={{ textAlign: "center", padding: 40, color: "var(--text-secondary)" }}>Loading members…</div>
-            ) : members.length === 0 ? (
-              <div className="glass-panel fade-up" style={{ padding: 60, textAlign: "center", color: "var(--text-secondary)" }}>
-                <Users size={48} style={{ margin: "0 auto 16px", opacity: 0.3 }} />
-                <p style={{ fontWeight: 500 }}>No members have logged in yet. Provision accounts in the Whitelist tab.</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {members.map(m => {
-                  const rc = getRoleConfig(m.role);
-                  const isEditing = editingMemberId === m.id;
-                  return (
-                    <div key={m.id} className="glass-panel fade-up" style={{ padding: "20px 24px" }}>
-                      {isEditing ? (
-                        <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                            <span style={{ fontSize: 15, fontWeight: 700 }}>Editing: {m.fullName}</span>
-                            <button onClick={() => setEditingMemberId(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}><X size={18} /></button>
-                          </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                            <div><label style={lSt}>Full Name</label><input value={editForm.fullName ?? ""} onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))} style={inputSt} /></div>
-                            <div><label style={lSt}>Branch & Batch</label><input value={editForm.branchBatch ?? ""} onChange={e => setEditForm(f => ({ ...f, branchBatch: e.target.value }))} style={inputSt} /></div>
-                            <div><label style={lSt}>Contact</label><input value={editForm.contact ?? ""} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))} style={inputSt} /></div>
-                            <div><label style={lSt}>Department</label><input value={editForm.department ?? ""} onChange={e => setEditForm(f => ({ ...f, department: e.target.value }))} style={inputSt} /></div>
-                            <div><label style={lSt}>Designation</label><input value={editForm.designation ?? ""} onChange={e => setEditForm(f => ({ ...f, designation: e.target.value }))} style={inputSt} /></div>
-                            <div><label style={lSt}>Expertise</label><input value={editForm.areasOfExpertise ?? ""} onChange={e => setEditForm(f => ({ ...f, areasOfExpertise: e.target.value }))} style={inputSt} /></div>
-                          </div>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            <button onClick={saveEditMember} style={{ display: "flex", alignItems: "center", gap: 6, background: "#10B981", border: "none", borderRadius: 10, padding: "10px 18px", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Save size={14} /> Save</button>
-                            <button onClick={() => setEditingMemberId(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "white", border: "1.5px solid var(--border-strong)", borderRadius: 10, padding: "10px 18px", color: "var(--text-secondary)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}><X size={14} /> Cancel</button>
-                          </div>
-                        </div>
+            {/* Create Team Form */}
+            <div className="glass-panel fade-up" style={{ padding: "20px", marginBottom: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
+              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="New Team Name" style={{ flex: 1, width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
+              <input value={newTeamDesc} onChange={e => setNewTeamDesc(e.target.value)} placeholder="Team Description" style={{ flex: 2, width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
+              <button 
+                onClick={async () => {
+                  if(!newTeamName) return;
+                  await createTeam(newTeamName, newTeamDesc);
+                  setNewTeamName(""); setNewTeamDesc("");
+                }} 
+                style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer", display: "flex", gap: 6, alignItems: "center" }}>
+                <PlusCircle size={16} /> Add Team
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {teams.map(team => {
+                // Find allowed users that belong to this team
+                const teamUsers = allowedUsers.filter(u => u.teamId === team.id);
+                // The actual profile from members if they have logged in
+                const teamMembers = members.filter(m => m.teamId === team.id);
+
+                return (
+                  <div key={team.id} className="glass-panel fade-up" style={{ padding: 24, background: "rgba(255,255,255,0.7)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16 }}>
+                      <div>
+                        <h3 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{team.name}</h3>
+                        {team.description && <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{team.description}</p>}
+                      </div>
+                      <button onClick={() => { if(confirm("Delete team?")) deleteTeam(team.id); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer" }}><Trash2 size={18} /></button>
+                    </div>
+
+                    {/* Team Members List */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                      {teamUsers.length === 0 ? (
+                        <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No members in this team.</p>
                       ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${rc.color}, ${rc.color}99)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>
-                            {m.fullName.charAt(0)}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{m.fullName}</div>
-                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4, flexWrap: "wrap" }}>
-                              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 8, background: rc.bg, color: rc.color }}>{rc.label}</span>
-                              {m.department && <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{m.department}</span>}
-                              {m.branchBatch && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{m.branchBatch}</span>}
+                        teamUsers.map(u => {
+                          const profile = teamMembers.find(m => m.email === u.email);
+                          const rc = getRoleConfig(u.role);
+                          const isEditing = editingMemberId === (profile?.id ?? u.email);
+                          
+                          if (isEditing) {
+                            return (
+                              <div key={u.email} className="glass-panel" style={{ padding: 16, border: "1px solid var(--brand-glow)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700 }}>Editing: {u.fullName || u.email}</span>
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                                  <div><label style={lSt}>Full Name</label><input value={editForm.fullName ?? ""} onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} /></div>
+                                  <div><label style={lSt}>Designation</label><input value={editForm.designation ?? ""} onChange={e => setEditForm(f => ({ ...f, designation: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} /></div>
+                                </div>
+                                <div style={{ display: "flex", gap: 10 }}>
+                                  <button onClick={async () => {
+                                    if(profile) {
+                                      await updateMemberProfile(profile.id, editForm);
+                                    }
+                                    await updateAllowedUser(u.email, { designation: editForm.designation, fullName: editForm.fullName });
+                                    setEditingMemberId(null);
+                                  }} style={{ display: "flex", alignItems: "center", gap: 6, background: "#10B981", border: "none", borderRadius: 8, padding: "8px 14px", color: "white", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Save size={14} /> Save</button>
+                                  <button onClick={() => setEditingMemberId(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "white", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 14px", color: "var(--text-secondary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><X size={14} /> Cancel</button>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={u.email} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px", borderRadius: 12, background: "white", border: "1px solid var(--border-strong)" }}>
+                              <div style={{ width: 40, height: 40, borderRadius: "50%", background: profile?.photoURL ? `url(${profile.photoURL}) center/cover` : `linear-gradient(135deg, ${rc.color}, ${rc.color}99)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "white", flexShrink: 0 }}>
+                                {!profile?.photoURL && (u.fullName?.[0] || u.email[0].toUpperCase())}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+                                  {u.fullName || u.email}
+                                  {!profile && <span style={{ fontSize: 10, background: "var(--warning-light)", color: "var(--warning)", padding: "2px 6px", borderRadius: 6, fontWeight: 800 }}>PENDING LOGIN</span>}
+                                </div>
+                                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 6, background: rc.bg, color: rc.color }}>{rc.label}</span>
+                                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{u.designation}</span>
+                                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{u.email}</span>
+                                </div>
+                              </div>
+                              <button onClick={() => {
+                                setEditingMemberId(profile?.id ?? u.email);
+                                setEditForm({ fullName: profile?.fullName ?? u.fullName, designation: profile?.designation ?? u.designation });
+                              }} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: 6 }}><Edit3 size={16} /></button>
+                              <button onClick={() => { if(confirm("Remove member?")) removeAllowedUser(u.email); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 6 }}><Trash2 size={16} /></button>
                             </div>
-                          </div>
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand)" }}>{m.corePoints}</div>
-                            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700 }}>XP</div>
-                          </div>
-                          <button onClick={() => startEditMember(m)} style={{ background: "white", border: "1.5px solid var(--border-strong)", borderRadius: 10, padding: 8, color: "var(--text-secondary)", cursor: "pointer" }}>
-                            <Edit3 size={16} />
-                          </button>
-                        </div>
+                          );
+                        })
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+
+                    {/* Add Member Form */}
+                    {addingMemberToTeam === team.id ? (
+                      <div style={{ padding: 16, border: "1px dashed var(--brand)", borderRadius: 12, background: "var(--brand-glow)" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                          <input value={newMemberForm.fullName} onChange={e => setNewMemberForm(f => ({...f, fullName: e.target.value}))} placeholder="Full Name" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
+                          <input value={newMemberForm.email} onChange={e => setNewMemberForm(f => ({...f, email: e.target.value}))} placeholder="Email" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
+                          <select value={newMemberForm.role} onChange={e => setNewMemberForm(f => ({...f, role: e.target.value as UserRole}))} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", cursor: "pointer", transition: "border-color 0.2s" }}>
+                            {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          </select>
+                          <input value={newMemberForm.designation} onChange={e => setNewMemberForm(f => ({...f, designation: e.target.value}))} placeholder="Designation" style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={async () => {
+                            if(!newMemberForm.email || !newMemberForm.fullName || !newMemberForm.designation) return;
+                            await addAllowedUser({
+                              email: newMemberForm.email.toLowerCase().trim(),
+                              role: newMemberForm.role,
+                              designation: newMemberForm.designation,
+                              fullName: newMemberForm.fullName,
+                              teamId: team.id,
+                              isActive: true,
+                              addedBy: user?.id ?? "admin"
+                            });
+                            setAddingMemberToTeam(null);
+                            setNewMemberForm({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
+                          }} style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer" }}>Add Member</button>
+                          <button onClick={() => setAddingMemberToTeam(null)} style={{ background: "transparent", color: "var(--text-secondary)", border: "none", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setAddingMemberToTeam(team.id)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "var(--brand)", background: "var(--brand-glow)", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+                        <PlusCircle size={16} /> Add Member to Team
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
 

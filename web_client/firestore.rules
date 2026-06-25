@@ -20,9 +20,24 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == userId
-                    && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'member');
+                    && (
+                      (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'member')
+                      || (
+                        request.auth.token.email != null &&
+                        exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)) &&
+                        request.resource.data.role == get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)).data.role
+                      )
+                    );
       allow update: if isAuthenticated() && (
-        (request.auth.uid == userId && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == resource.data.role))
+        (request.auth.uid == userId && (
+          !request.resource.data.keys().hasAny(['role']) 
+          || request.resource.data.role == resource.data.role
+          || (
+            request.auth.token.email != null &&
+            exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)) &&
+            request.resource.data.role == get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)).data.role
+          )
+        ))
         || isChapterAdmin()
       );
       allow delete: if isChapterAdmin();

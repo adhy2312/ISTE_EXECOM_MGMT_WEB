@@ -14,10 +14,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { ExecomMember, UserRole, UserStatus } from '@/types/models';
 
-const ALLOWED_DOMAIN = 'mbcet.ac.in';
 
-const isDomainAllowed = (email: string | null) =>
-  !!email && email.toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`);
 
 interface AuthState {
   user: ExecomMember | null;
@@ -59,12 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   initAuth: () => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // 1. Domain check
-        if (!isDomainAllowed(firebaseUser.email)) {
-          await signOut(auth);
-          set({ user: null, firebaseUser: null, isLoading: false, error: 'Access restricted to @mbcet.ac.in accounts only.' });
-          return;
-        }
+        // We rely purely on the whitelist check below to restrict access.
         set({ firebaseUser, isLoading: true });
 
         try {
@@ -126,12 +118,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithEmail: async (email, password, rememberMe = false) => {
-    set({ error: null });
-    if (!isDomainAllowed(email)) {
-      set({ error: 'Only @mbcet.ac.in email addresses are allowed.' });
-      throw new Error('Domain not allowed');
-    }
-    set({ isLoading: true });
+    set({ error: null, isLoading: true });
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
@@ -153,13 +140,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ hd: ALLOWED_DOMAIN });
-      const result = await signInWithPopup(auth, provider);
-      if (!isDomainAllowed(result.user.email)) {
-        await signOut(auth);
-        set({ error: 'Only @mbcet.ac.in accounts are permitted.', isLoading: false });
-        throw new Error('Domain not allowed');
-      }
+      await signInWithPopup(auth, provider);
     } catch (e: unknown) {
       const err = e as Error & { code?: string };
       if (err.code !== 'auth/popup-closed-by-user') {
