@@ -1,0 +1,34 @@
+name: iOS App Store Release
+
+on:
+  push:
+    branches:
+      - main # Triggers when you push to main
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build iOS IPA
+        run: flutter build ipa --release --no-codesign
+        # Note: You will need to add Apple Certificates here later to actually push to TestFlight.
+        # This currently builds the unsigned Archive that proves it compiles on Mac!
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: build/ios/ipa/

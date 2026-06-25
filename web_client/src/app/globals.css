@@ -1,0 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --bg:             #F8F7F4;   /* warm cream — feels like quality paper */
+  --bg-elevated:    #FFFFFF;
+  --bg-muted:       #F1F0EB;
+  --bg-subtle:      #ECEAE3;
+
+  /* Text */
+  --text-primary:   #1C1917;   /* warm near-black */
+  --text-secondary: #78716C;   /* warm stone gray */
+  --text-muted:     #A8A29E;
+
+  /* Brand — deep indigo (institutional authority) */
+  --brand:          #3730A3;
+  --brand-mid:      #6366F1;
+  --brand-light:    #EEF2FF;
+  --brand-glow:     rgba(99, 102, 241, 0.18);
+
+  /* Accent — warm coral (human warmth) */
+  --accent:         #EA580C;
+  --accent-light:   #FFF7ED;
+  --accent-glow:    rgba(234, 88, 12, 0.15);
+
+  /* Status */
+  --success:        #16A34A;
+  --success-light:  #F0FDF4;
+  --warning:        #D97706;
+  --warning-light:  #FFFBEB;
+  --error:          #DC2626;
+  --error-light:    #FEF2F2;
+
+  /* Borders */
+  --border:         rgba(0, 0, 0, 0.08);
+  --border-strong:  rgba(0, 0, 0, 0.14);
+
+  /* Shadows (warm-tinted) */
+  --shadow-sm:  0 1px 3px rgba(28,25,23,0.08), 0 1px 2px rgba(28,25,23,0.05);
+  --shadow-md:  0 4px 16px rgba(28,25,23,0.08), 0 2px 4px rgba(28,25,23,0.05);
+  --shadow-lg:  0 12px 40px rgba(28,25,23,0.10), 0 4px 8px rgba(28,25,23,0.05);
+  --shadow-xl:  0 24px 60px rgba(28,25,23,0.12), 0 8px 16px rgba(28,25,23,0.06);
+
+  /* iOS safe areas */
+  --safe-area-inset-top:    env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  letter-spacing: 0.025em;
+  font-size: 15px; /* Slightly larger base size for readability */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+  /* Subtle grain texture for warmth */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 110%, rgba(234,88,12,0.06) 0%, transparent 60%);
+}
+
+h1, h2, h3, h4, h5, h6, .outfit-font {
+  font-family: 'Syne', sans-serif;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* ── The Ultimate Aesthetic Mix: Glass + Clay + Neu + Brutal ─────────────── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  
+  /* Elegant glass border */
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  
+  /* Pure Claymorphism + Glass */
+  box-shadow: 
+    inset 4px 4px 12px rgba(255, 255, 255, 0.9), 
+    inset -4px -4px 12px rgba(0, 0, 0, 0.03),
+    0 8px 32px rgba(31, 38, 135, 0.07);
+    
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.glass-panel:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    inset 4px 4px 12px rgba(255, 255, 255, 1), 
+    inset -4px -4px 12px rgba(0, 0, 0, 0.04),
+    0 16px 40px rgba(31, 38, 135, 0.1);
+}
+
+/* ── Dock Navigation ─────────────────────────────────────────── */
+.dock-nav {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 100px;
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.08), 
+    inset 0 4px 16px rgba(255,255,255,0.9);
+}
+
+.dock-item:hover {
+  background: rgba(0,0,0,0.05) !important;
+  transform: scale(1.15) translateY(-4px);
+  z-index: 10;
+}
+
+.dock-item.active:hover {
+  background: linear-gradient(135deg, var(--brand), #4338CA) !important;
+}
+
+.dock-tooltip {
+  position: absolute;
+  top: -40px;
+  background: var(--text-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.9);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.dock-item:hover .dock-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Animated Background ────────────────────────────────────────────────────── */
+.animated-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg);
+  overflow: hidden;
+}
+.animated-bg::before,
+.animated-bg::after {
+  content: "";
+  position: absolute;
+  width: 80vw;
+  height: 80vw;
+  max-width: 700px;
+  max-height: 700px;
+  border-radius: 50%;
+  opacity: 0.6;
+  will-change: transform;
+  animation: floatBlobs 22s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  filter: blur(90px);
+}
+.animated-bg::before {
+  background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, rgba(167,139,250,0.12) 60%, transparent 100%);
+  top: -20%; left: -10%;
+}
+.animated-bg::after {
+  background: radial-gradient(circle, rgba(251,146,60,0.2) 0%, rgba(244,114,182,0.1) 60%, transparent 100%);
+  bottom: -20%; right: -10%;
+  animation-delay: -11s;
+  animation-duration: 28s;
+}
+@keyframes floatBlobs {
+  0%   { transform: translate3d(0,    0,   0) scale(1)    rotate(0deg); }
+  33%  { transform: translate3d(8%,   14%, 0) scale(1.08) rotate(4deg); }
+  66%  { transform: translate3d(-8%,  5%,  0) scale(0.94) rotate(-4deg); }
+  100% { transform: translate3d(4%,  -12%, 0) scale(1.04) rotate(2deg); }
+}
+
+/* ── Layout Utilities ───────────────────────────────────────────────────────── */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  padding-bottom: 5.5rem;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand), #4338CA);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 13px 24px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(55, 48, 163, 0.28);
+  min-height: 48px;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(55, 48, 163, 0.35);
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* ── Text Utilities ─────────────────────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-warm {
+  background: linear-gradient(135deg, #EA580C, #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Inputs ─────────────────────────────────────────────────────────────────── */
+input, textarea, select {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+/* ── Loading spinner ────────────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Decorative serif for artistic headings ─────────────────────────────────── */
+.serif-display {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+
+/* ── Status badges ──────────────────────────────────────────────────────────── */
+.badge-success { background: var(--success-light); color: var(--success); }
+.badge-warning { background: var(--warning-light); color: var(--warning); }
+.badge-error   { background: var(--error-light);   color: var(--error); }
+.badge-brand   { background: var(--brand-light);   color: var(--brand); }

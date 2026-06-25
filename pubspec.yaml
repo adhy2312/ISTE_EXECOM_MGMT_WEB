@@ -1,0 +1,41 @@
+name: iste_mbcet_client
+description: ISTE SC MBCET Executive Management & Accountability Mobile Client
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9
+  google_fonts: ^6.1.0
+  qr_flutter: ^4.1.0
+  uuid: ^4.3.3
+  intl: ^0.19.0
+  flutter_secure_storage: ^9.0.0
+  firebase_core: ^4.11.0
+  cloud_firestore: ^6.6.0
+  firebase_messaging: ^16.4.1
+  screenshot: ^3.0.0
+  path_provider: ^2.1.6
+  share_plus: ^12.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
