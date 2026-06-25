@@ -7,7 +7,7 @@ import '../controllers/member_controller.dart';
 import '../core/theme.dart';
 
 class TaskMatrixScreen extends ConsumerWidget {
-  const TaskMatrixScreen({Key? key}) : super(key: key);
+  const TaskMatrixScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,26 +55,36 @@ class TaskMatrixScreen extends ConsumerWidget {
 
 class _TaskCard extends ConsumerWidget {
   final TaskItem task;
-  const _TaskCard({Key? key, required this.task}) : super(key: key);
+  const _TaskCard({super.key, required this.task});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Color statusColor;
     switch (task.state) {
-      case TaskState.pending: statusColor = Colors.grey; break;
-      case TaskState.inProgress: statusColor = AppTheme.primaryBlue; break;
-      case TaskState.underReview: statusColor = AppTheme.warningOrange; break;
-      case TaskState.completed: statusColor = AppTheme.successGreen; break;
+      case TaskState.pending:
+        statusColor = Colors.grey;
+        break;
+      case TaskState.inProgress:
+        statusColor = AppTheme.primaryBlue;
+        break;
+      case TaskState.underReview:
+        statusColor = AppTheme.warningOrange;
+        break;
+      case TaskState.completed:
+        statusColor = AppTheme.successGreen;
+        break;
     }
 
     return Card(
       child: ExpansionTile(
-        title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(task.title,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('Due: ${DateFormat.yMd().format(task.targetDeadline)}'),
         trailing: Chip(
           label: Text(task.state.name.toUpperCase()),
-          backgroundColor: statusColor.withOpacity(0.2),
-          labelStyle: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+          backgroundColor: statusColor.withValues(alpha: 0.2),
+          labelStyle: TextStyle(
+              color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
         ),
         children: [
           Padding(
@@ -87,7 +97,10 @@ class _TaskCard extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Bounty: ${task.potentialPoints} XP', style: const TextStyle(color: AppTheme.accentNeon, fontWeight: FontWeight.bold)),
+                    Text('Bounty: ${task.potentialPoints} XP',
+                        style: const TextStyle(
+                            color: AppTheme.accentNeon,
+                            fontWeight: FontWeight.bold)),
                     _buildActionButtons(context, ref),
                   ],
                 ),
@@ -105,28 +118,33 @@ class _TaskCard extends ConsumerWidget {
         children: [
           TextButton(
             onPressed: () {
-              ref.read(tasksProvider.notifier).updateTaskState(task.id, TaskState.inProgress);
+              ref
+                  .read(tasksProvider.notifier)
+                  .updateTaskState(task.id, TaskState.inProgress);
             },
-            child: const Text('Revert', style: TextStyle(color: Colors.redAccent)),
+            child:
+                const Text('Revert', style: TextStyle(color: Colors.redAccent)),
           ),
           ElevatedButton(
             onPressed: () {
               ref.read(tasksProvider.notifier).updateTaskState(
-                task.id, 
-                TaskState.completed, 
-                pointsToAward: task.potentialPoints, 
-                memberId: task.assignedMemberId
-              );
+                  task.id, TaskState.completed,
+                  pointsToAward: task.potentialPoints,
+                  memberId: task.assignedMemberId);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.successGreen),
             child: const Text('Approve'),
           ),
         ],
       );
-    } else if (task.state == TaskState.pending || task.state == TaskState.inProgress) {
+    } else if (task.state == TaskState.pending ||
+        task.state == TaskState.inProgress) {
       return ElevatedButton(
         onPressed: () {
-          ref.read(tasksProvider.notifier).updateTaskState(task.id, TaskState.underReview);
+          ref
+              .read(tasksProvider.notifier)
+              .updateTaskState(task.id, TaskState.underReview);
         },
         child: const Text('Submit for Review'),
       );
@@ -136,7 +154,7 @@ class _TaskCard extends ConsumerWidget {
 }
 
 class _AddTaskDialog extends ConsumerStatefulWidget {
-  const _AddTaskDialog({Key? key}) : super(key: key);
+  const _AddTaskDialog({super.key});
 
   @override
   ConsumerState<_AddTaskDialog> createState() => _AddTaskDialogState();
@@ -159,17 +177,27 @@ class _AddTaskDialogState extends ConsumerState<_AddTaskDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
+            TextField(
+                controller: _titleCtrl,
+                decoration: const InputDecoration(labelText: 'Title')),
             const SizedBox(height: 8),
-            TextField(controller: _descCtrl, decoration: const InputDecoration(labelText: 'Description')),
+            TextField(
+                controller: _descCtrl,
+                decoration: const InputDecoration(labelText: 'Description')),
             const SizedBox(height: 8),
-            TextField(controller: _pointsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points Bounty')),
+            TextField(
+                controller: _pointsCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Points Bounty')),
             const SizedBox(height: 8),
             membersAsync.when(
               data: (members) => DropdownButtonFormField<String>(
-                value: _selectedMemberId,
+                initialValue: _selectedMemberId,
                 hint: const Text('Assign Member'),
-                items: members.map((m) => DropdownMenuItem(value: m.id, child: Text(m.fullName))).toList(),
+                items: members
+                    .map((m) =>
+                        DropdownMenuItem(value: m.id, child: Text(m.fullName)))
+                    .toList(),
                 onChanged: (val) => setState(() => _selectedMemberId = val),
               ),
               loading: () => const CircularProgressIndicator(),
@@ -179,7 +207,9 @@ class _AddTaskDialogState extends ConsumerState<_AddTaskDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel')),
         ElevatedButton(
           onPressed: () {
             if (_titleCtrl.text.isNotEmpty && _selectedMemberId != null) {

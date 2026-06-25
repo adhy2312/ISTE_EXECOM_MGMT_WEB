@@ -3,7 +3,8 @@ import '../models/task_item.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'database_service_interface.dart';
 
-final mockDatabaseServiceProvider = Provider<IDatabaseService>((ref) => MockDatabaseService());
+final mockDatabaseServiceProvider =
+    Provider<IDatabaseService>((ref) => MockDatabaseService());
 
 class MockDatabaseService implements IDatabaseService {
   final List<ExecomMember> _members = [
@@ -67,16 +68,19 @@ class MockDatabaseService implements IDatabaseService {
   ];
 
   // Members API
+  @override
   Future<List<ExecomMember>> getMembers() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.unmodifiable(_members);
   }
 
+  @override
   Future<void> addMember(ExecomMember member) async {
     await Future.delayed(const Duration(milliseconds: 500));
     _members.add(member);
   }
 
+  @override
   Future<void> updateMemberPoints(String memberId, int pointsToAdd) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _members.indexWhere((m) => m.id == memberId);
@@ -89,16 +93,19 @@ class MockDatabaseService implements IDatabaseService {
   }
 
   // Tasks API
+  @override
   Future<List<TaskItem>> getTasks() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return List.unmodifiable(_tasks);
   }
 
+  @override
   Future<void> addTask(TaskItem task) async {
     await Future.delayed(const Duration(milliseconds: 500));
     _tasks.add(task);
   }
 
+  @override
   Future<void> updateTaskState(String taskId, TaskState newState) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _tasks.indexWhere((t) => t.id == taskId);
@@ -185,7 +192,8 @@ class MockDatabaseService implements IDatabaseService {
     return [
       {
         "title": "August General Assembly",
-        "content": "## Minutes of Meeting\n\n- **Date:** Aug 15\n- **Attendees:** 45\n- **Agenda:** Techfest planning.\n- **Resolution:** Budget approved."
+        "content":
+            "## Minutes of Meeting\n\n- **Date:** Aug 15\n- **Attendees:** 45\n- **Agenda:** Techfest planning.\n- **Resolution:** Budget approved."
       }
     ];
   }

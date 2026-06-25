@@ -71,8 +71,8 @@ export default function BootstrapPage() {
       log("🎉 Bootstrap complete! You can now log in at /login");
       log("   Delete the /bootstrap page after this.");
       setDone(true);
-    } catch (e: any) {
-      log(`❌ Error: ${e.message}`);
+    } catch (e: unknown) {
+      log(`❌ Error: ${(e as Error).message}`);
     } finally {
       setRunning(false);
     }

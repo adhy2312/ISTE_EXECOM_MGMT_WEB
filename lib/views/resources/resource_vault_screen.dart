@@ -5,7 +5,7 @@ import '../../models/resource.dart';
 import '../../core/theme.dart';
 
 class ResourceVaultScreen extends ConsumerWidget {
-  const ResourceVaultScreen({Key? key}) : super(key: key);
+  const ResourceVaultScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +52,7 @@ class ResourceVaultScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final category = grouped.keys.elementAt(index);
               final items = grouped[category]!;
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -60,7 +60,10 @@ class ResourceVaultScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       category.name.toUpperCase(),
-                      style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                      style: const TextStyle(
+                          color: AppTheme.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5),
                     ),
                   ),
                   ...items.map((r) => _buildResourceTile(r)),
@@ -76,11 +79,21 @@ class ResourceVaultScreen extends ConsumerWidget {
   Widget _buildResourceTile(Resource r) {
     IconData icon;
     switch (r.category) {
-      case ResourceCategory.sop: icon = Icons.rule_folder; break;
-      case ResourceCategory.designAsset: icon = Icons.brush; break;
-      case ResourceCategory.template: icon = Icons.description; break;
-      case ResourceCategory.handbook: icon = Icons.menu_book; break;
-      case ResourceCategory.pastEventData: icon = Icons.archive; break;
+      case ResourceCategory.sop:
+        icon = Icons.rule_folder;
+        break;
+      case ResourceCategory.designAsset:
+        icon = Icons.brush;
+        break;
+      case ResourceCategory.template:
+        icon = Icons.description;
+        break;
+      case ResourceCategory.handbook:
+        icon = Icons.menu_book;
+        break;
+      case ResourceCategory.pastEventData:
+        icon = Icons.archive;
+        break;
     }
 
     return Card(
@@ -92,8 +105,10 @@ class ResourceVaultScreen extends ConsumerWidget {
       ),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.accentNeon),
-        title: Text(r.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(r.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+        title:
+            Text(r.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle:
+            Text(r.description, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: IconButton(
           icon: const Icon(Icons.open_in_browser, color: AppTheme.primaryBlue),
           onPressed: () {

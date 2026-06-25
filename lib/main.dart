@@ -8,12 +8,13 @@ import 'views/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     await Firebase.initializeApp(); // Fallback if no options
   } catch (e) {
-    debugPrint("Firebase init failed (flutterfire configure likely missing): $e");
+    debugPrint(
+        "Firebase init failed (flutterfire configure likely missing): $e");
   }
 
   runApp(
@@ -24,7 +25,7 @@ void main() async {
 }
 
 class IsteApp extends StatelessWidget {
-  const IsteApp({Key? key}) : super(key: key);
+  const IsteApp({super.key});
 
   @override
   Widget build(BuildContext context) {

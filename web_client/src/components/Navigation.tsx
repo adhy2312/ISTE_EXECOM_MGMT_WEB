@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trophy, CheckSquare, Layers, Home, Zap, Crown, Telescope } from "lucide-react";
+import {
+  Trophy, Layers, Home, Zap, Crown, Telescope,
+  BarChart2, User, Settings,
+} from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { UserRole } from "@/types/models";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const NAVLESS_ROUTES = ["/login", "/faculty", "/bootstrap"];
+const NAVLESS_ROUTES = ["/login", "/bootstrap"];
 
 export function Navigation() {
   const pathname = usePathname();
@@ -26,20 +29,38 @@ export function Navigation() {
 
   if (!user || NAVLESS_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
-  const isChairperson = user.role === UserRole.chapterAdmin || user.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
+  const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
+  const isAdmin = user.role === UserRole.chapterAdmin || user.email === ROOT_ADMIN;
   const isFaculty = user.role === UserRole.facultyAdvisor;
 
-  const links = [
-    { href: "/",            label: "Home",    icon: Home },
-    { href: "/leaderboard", label: "Ranks",   icon: Trophy },
-    { href: "/hub",         label: "Hub",     icon: Layers },
-    ...(isFaculty
-      ? [{ href: "/observatory", label: "Observe", icon: Telescope }]
-      : isChairperson
-        ? [{ href: "/executive", label: "Command", icon: Crown }]
-        : [{ href: "/tasks", label: "Tasks", icon: CheckSquare }, { href: "/points", label: "My XP", icon: Zap }]
-    ),
-  ];
+  // ── Role-based dock items (max 6) ────────────────────────────────────
+  let links: { href: string; label: string; icon: React.ElementType }[];
+
+  if (isFaculty) {
+    links = [
+      { href: "/",        label: "Home",    icon: Home },
+      { href: "/faculty", label: "Observe", icon: Telescope },
+    ];
+  } else if (isAdmin) {
+    links = [
+      { href: "/",            label: "Home",     icon: Home },
+      { href: "/leaderboard", label: "Ranks",    icon: Trophy },
+      { href: "/hub",         label: "Hub",      icon: Layers },
+      { href: "/evaluation",  label: "Eval",     icon: BarChart2 },
+      { href: "/executive",   label: "Command",  icon: Crown },
+      { href: "/settings",    label: "Settings", icon: Settings },
+    ];
+  } else {
+    // General members, execomCore, secretary, treasurer, techHead, prMedia
+    links = [
+      { href: "/",            label: "Home",    icon: Home },
+      { href: "/leaderboard", label: "Ranks",   icon: Trophy },
+      { href: "/hub",         label: "Hub",     icon: Layers },
+      { href: "/evaluation",  label: "Eval",    icon: BarChart2 },
+      { href: "/points",      label: "My XP",   icon: Zap },
+      { href: "/profile",     label: "Profile", icon: User },
+    ];
+  }
 
   return (
     <div style={{
@@ -47,24 +68,28 @@ export function Navigation() {
       display: "flex", justifyContent: "center", pointerEvents: "none",
       paddingBottom: "var(--safe-area-inset-bottom)",
     }}>
-      <nav ref={navRef} className="glass-panel dock-nav" style={{ 
-        display: "flex", alignItems: "center", padding: "8px 12px", gap: 6,
-        borderRadius: 40, pointerEvents: "auto", border: "1.5px solid var(--border-strong)" 
+      <nav ref={navRef} className="glass-panel dock-nav" style={{
+        display: "flex", alignItems: "center", padding: "7px 10px", gap: 4,
+        borderRadius: 40, pointerEvents: "auto", border: "1.5px solid var(--border-strong)",
       }}>
         {links.map((link) => {
           const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
           const Icon = link.icon;
           return (
-            <Link key={link.href} href={link.href} className={`dock-item ${isActive ? "active" : ""}`} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              textDecoration: "none", width: 44, height: 44, borderRadius: 22,
-              color: isActive ? "white" : "var(--text-secondary)",
-              background: isActive ? "linear-gradient(135deg, var(--brand), #4338CA)" : "transparent",
-              transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
-              position: "relative",
-            }}>
-              <Icon size={isActive ? 22 : 24} strokeWidth={isActive ? 2.5 : 2} />
-              {/* Tooltip on hover is handled by CSS */}
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`dock-item ${isActive ? "active" : ""}`}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                textDecoration: "none", width: 42, height: 42, borderRadius: 21,
+                color: isActive ? "white" : "var(--text-secondary)",
+                background: isActive ? "linear-gradient(135deg, var(--brand), #4338CA)" : "transparent",
+                transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                position: "relative",
+              }}
+            >
+              <Icon size={isActive ? 20 : 22} strokeWidth={isActive ? 2.5 : 2} />
               <span className="dock-tooltip">{link.label}</span>
             </Link>
           );

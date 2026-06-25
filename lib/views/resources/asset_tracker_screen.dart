@@ -5,7 +5,7 @@ import '../../models/inventory_asset.dart';
 import '../../core/theme.dart';
 
 class AssetTrackerScreen extends ConsumerWidget {
-  const AssetTrackerScreen({Key? key}) : super(key: key);
+  const AssetTrackerScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +52,8 @@ class AssetTrackerScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAssetCard(BuildContext context, WidgetRef ref, InventoryAsset a) {
+  Widget _buildAssetCard(
+      BuildContext context, WidgetRef ref, InventoryAsset a) {
     Color statusColor;
     IconData statusIcon;
 
@@ -81,8 +82,11 @@ class AssetTrackerScreen extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ExpansionTile(
         leading: Icon(statusIcon, color: statusColor),
-        title: Text(a.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(a.sku, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+        title:
+            Text(a.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(a.sku,
+            style:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -96,14 +100,17 @@ class AssetTrackerScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Location:', style: const TextStyle(color: AppTheme.textSecondary)),
-                    Text(a.location, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Location:',
+                        style: TextStyle(color: AppTheme.textSecondary)),
+                    Text(a.location,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Description: ${a.description}', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                Text('Description: ${a.description}',
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 12)),
                 const SizedBox(height: 16),
-                
                 if (a.status == AssetStatus.available)
                   SizedBox(
                     width: double.infinity,
@@ -113,11 +120,15 @@ class AssetTrackerScreen extends ConsumerWidget {
                         final updated = a.copyWith(
                           status: AssetStatus.checkedOut,
                           checkedOutById: 'current-user-mock',
-                          expectedReturnDate: DateTime.now().add(const Duration(days: 1)),
+                          expectedReturnDate:
+                              DateTime.now().add(const Duration(days: 1)),
                         );
-                        ref.read(inventoryProvider.notifier).updateAsset(updated);
+                        ref
+                            .read(inventoryProvider.notifier)
+                            .updateAsset(updated);
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue),
                       child: const Text('Check Out Asset'),
                     ),
                   )
@@ -127,10 +138,17 @@ class AssetTrackerScreen extends ConsumerWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         // Mock Return
-                        final updated = a.copyWith(status: AssetStatus.available, checkedOutById: null, expectedReturnDate: null);
-                        ref.read(inventoryProvider.notifier).updateAsset(updated);
+                        final updated = a.copyWith(
+                            status: AssetStatus.available,
+                            checkedOutById: null,
+                            expectedReturnDate: null);
+                        ref
+                            .read(inventoryProvider.notifier)
+                            .updateAsset(updated);
                       },
-                      style: OutlinedButton.styleFrom(foregroundColor: AppTheme.successGreen, side: const BorderSide(color: AppTheme.successGreen)),
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.successGreen,
+                          side: const BorderSide(color: AppTheme.successGreen)),
                       child: const Text('Return Asset'),
                     ),
                   )

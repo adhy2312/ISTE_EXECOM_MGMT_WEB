@@ -45,8 +45,8 @@ export const usePointsStore = create<PointsStore>((set) => ({
     try {
       await addDoc(collection(db, 'energyPointRequests'), payload);
       set({ isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },
@@ -62,8 +62,8 @@ export const usePointsStore = create<PointsStore>((set) => ({
       const snap = await getDocs(q);
       const requests = snap.docs.map(d => ({ id: d.id, ...d.data() } as EnergyPointRequest));
       set({ requests, isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
     }
   },
 
@@ -74,8 +74,8 @@ export const usePointsStore = create<PointsStore>((set) => ({
       const snap = await getDocs(q);
       const requests = snap.docs.map(d => ({ id: d.id, ...d.data() } as EnergyPointRequest));
       set({ requests, isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
     }
   },
 
@@ -111,8 +111,8 @@ export const usePointsStore = create<PointsStore>((set) => ({
           r.id === id ? { ...r, status: EnergyPointStatus.approved, awardedPoints, chairpersonNote: note } : r
         ),
       }));
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },
@@ -138,8 +138,8 @@ export const usePointsStore = create<PointsStore>((set) => ({
           r.id === id ? { ...r, status: EnergyPointStatus.rejected, chairpersonNote: note } : r
         ),
       }));
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },

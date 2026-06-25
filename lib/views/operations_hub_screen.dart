@@ -6,7 +6,7 @@ import 'resources/resource_vault_screen.dart';
 import 'resources/asset_tracker_screen.dart';
 
 class OperationsHubScreen extends StatelessWidget {
-  const OperationsHubScreen({Key? key}) : super(key: key);
+  const OperationsHubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +55,13 @@ class OperationsHubScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHubCard(BuildContext context, String title, IconData icon, Color color, Widget? destination) {
+  Widget _buildHubCard(BuildContext context, String title, IconData icon,
+      Color color, Widget? destination) {
     return Card(
       color: AppTheme.surfaceDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: color.withOpacity(0.3)),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
       ),
       child: InkWell(
         onTap: destination == null
@@ -70,7 +71,8 @@ class OperationsHubScreen extends StatelessWidget {
                 );
               }
             : () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => destination));
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => destination));
               },
         borderRadius: BorderRadius.circular(20),
         child: Column(

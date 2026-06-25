@@ -5,21 +5,23 @@ import { useAuthStore } from "@/store/auth";
 import { useMembersStore } from "@/store/members";
 import { usePointsStore } from "@/store/points";
 import { useAdminStore } from "@/store/admin";
-import { EnergyPointStatus, UserRole } from "@/types/models";
+import { useTasksStore } from "@/store/tasks";
+import { EnergyPointStatus, UserRole, ExecomMember } from "@/types/models";
 import gsap from "gsap";
 import {
   Crown, Zap, CheckCircle2, XCircle,
   ExternalLink, Clock, BarChart2, LogOut, ChevronRight,
   ShieldCheck, PlusCircle, Trash2, Edit3, Save, X,
-  ToggleLeft, ToggleRight,
+  ToggleLeft, ToggleRight, Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
-type Tab = "overview" | "approvals" | "members" | "access";
+type Tab = "overview" | "analytics" | "approvals" | "members" | "access" | "builder";
 
 // ── Role metadata (Light theme tailored) ──────────────────────────────────
 const ROLE_OPTIONS: { value: UserRole; label: string; color: string; bg: string }[] = [
-  { value: UserRole.chapterAdmin,  label: "Chairperson",     color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
+  { value: UserRole.chapterAdmin,  label: "PR Head",         color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
   { value: UserRole.secretary,     label: "Secretary",        color: "#5B21B6", bg: "rgba(91,33,182,0.1)" },
   { value: UserRole.treasurer,     label: "Treasurer",        color: "#0369A1", bg: "rgba(3,105,161,0.1)" },
   { value: UserRole.techHead,      label: "Tech Head",        color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
@@ -37,15 +39,24 @@ const emptyForm = { email: "", role: UserRole.generalMember, designation: "" };
 
 export default function ExecutivePage() {
   const { user, logout } = useAuthStore();
-  const { members, fetchMembers } = useMembersStore();
+  const { members, teams, fetchMembers, fetchTeams, createTeam, deleteTeam } = useMembersStore();
   const { requests, isLoading: pointsLoading, fetchAllPending, approveRequest, rejectRequest } = usePointsStore();
   const {
     allowedUsers, isLoading: adminLoading,
     subscribeToAllowedUsers, addAllowedUser, updateAllowedUser, removeAllowedUser,
   } = useAdminStore();
+  const { tasks, fetchTasks } = useTasksStore();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  // Builder state
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [builderEditForm, setBuilderEditForm] = useState<Partial<ExecomMember>>({});
+  const [newTeamName, setNewTeamName] = useState("");
+  const [newTeamDesc, setNewTeamDesc] = useState("");
+  const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
+  const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
+
   // Approval states
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState("");
@@ -69,10 +80,12 @@ export default function ExecutivePage() {
 
   useEffect(() => {
     fetchMembers();
+    fetchTeams();
     fetchAllPending();
+    fetchTasks();
     const unsub = subscribeToAllowedUsers();
     return () => unsub();
-  }, [fetchMembers, fetchAllPending, subscribeToAllowedUsers]);
+  }, [fetchMembers, fetchTeams, fetchAllPending, fetchTasks, subscribeToAllowedUsers]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -148,8 +161,10 @@ export default function ExecutivePage() {
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "overview",  label: "Overview" },
+    { id: "analytics", label: "Analytics" },
     { id: "approvals", label: "Approvals", count: pendingRequests.length },
     { id: "members",   label: "Members" },
+    { id: "builder",   label: "ExeCom Builder" },
     { id: "access",    label: "Access Control" },
   ];
 
@@ -268,6 +283,15 @@ export default function ExecutivePage() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════ */}
+        {/* ANALYTICS TAB                                                 */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "analytics" && (
+          <div className="fade-up">
+            <AnalyticsDashboard members={members} teams={teams} requests={requests} tasks={tasks} />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
         {/* APPROVALS TAB                                                 */}
         {/* ══════════════════════════════════════════════════════════════ */}
         {activeTab === "approvals" && (
@@ -326,7 +350,7 @@ export default function ExecutivePage() {
                                 <label style={{ fontSize: 13, fontWeight: 800, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Award XP: <span style={{ color: "var(--accent)", fontSize: 15 }}>{awardPoints} XP</span></label>
                                 <input type="range" min={0} max={req.requestedPoints} step={5} value={awardPoints} onChange={(e) => setAwardPoints(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--accent)", cursor: "pointer", marginBottom: 16 }} />
                               </div>
-                              <textarea value={reviewNote} onChange={(e) => setReviewNote(e.target.value)} placeholder="Chairperson note (optional)" rows={2}
+                              <textarea value={reviewNote} onChange={(e) => setReviewNote(e.target.value)} placeholder="Admin note (optional)" rows={2}
                                 style={{ width: "100%", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 16, padding: "12px 16px", color: "var(--text-primary)", fontSize: 14, outline: "none", resize: "vertical", fontFamily: "'Plus Jakarta Sans',sans-serif", boxShadow: "inset 2px 2px 8px rgba(0,0,0,0.02)" }} />
                               <div style={{ display: "flex", gap: 12 }}>
                                 <button onClick={() => handleApprove(req)} disabled={processing}
@@ -372,6 +396,154 @@ export default function ExecutivePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/* EXECOM BUILDER TAB                                            */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {activeTab === "builder" && (
+          <>
+            <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+              <div>
+                <h2 className="outfit-font" style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 10 }}>
+                  <Users size={24} color="var(--brand)" /> ExeCom Builder
+                </h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>Manage sections, add new teams, and structure members.</p>
+              </div>
+            </div>
+
+            {/* Create Team Form */}
+            <div className="glass-panel fade-up" style={{ padding: "20px", marginBottom: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
+              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="New Team Name" style={{ flex: 1, ...inputSt }} />
+              <input value={newTeamDesc} onChange={e => setNewTeamDesc(e.target.value)} placeholder="Team Description" style={{ flex: 2, ...inputSt }} />
+              <button 
+                onClick={async () => {
+                  if(!newTeamName) return;
+                  await createTeam(newTeamName, newTeamDesc);
+                  setNewTeamName(""); setNewTeamDesc("");
+                }} 
+                style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer", display: "flex", gap: 6, alignItems: "center" }}>
+                <PlusCircle size={16} /> Add Team
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {teams.map(team => {
+                // Find allowed users that belong to this team
+                const teamUsers = allowedUsers.filter(u => u.teamId === team.id);
+                // The actual profile from members if they have logged in
+                const teamMembers = members.filter(m => m.teamId === team.id);
+
+                return (
+                  <div key={team.id} className="glass-panel fade-up" style={{ padding: 24, background: "rgba(255,255,255,0.7)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16 }}>
+                      <div>
+                        <h3 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{team.name}</h3>
+                        {team.description && <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{team.description}</p>}
+                      </div>
+                      <button onClick={() => { if(confirm("Delete team?")) deleteTeam(team.id); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer" }}><Trash2 size={18} /></button>
+                    </div>
+
+                    {/* Team Members List */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                      {teamUsers.length === 0 ? (
+                        <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No members in this team.</p>
+                      ) : (
+                        teamUsers.map(u => {
+                          const profile = teamMembers.find(m => m.email === u.email);
+                          const rc = getRoleConfig(u.role);
+                          const isEditing = editingMemberId === (profile?.id ?? u.email);
+                          
+                          if (isEditing) {
+                            return (
+                              <div key={u.email} className="glass-panel" style={{ padding: 16, border: "1px solid var(--brand-glow)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 700 }}>Editing: {u.fullName || u.email}</span>
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                                  <div><label style={labelSt}>Full Name</label><input value={builderEditForm.fullName ?? ""} onChange={e => setBuilderEditForm(f => ({ ...f, fullName: e.target.value }))} style={inputSt} /></div>
+                                  <div><label style={labelSt}>Designation</label><input value={builderEditForm.designation ?? ""} onChange={e => setBuilderEditForm(f => ({ ...f, designation: e.target.value }))} style={inputSt} /></div>
+                                </div>
+                                <div style={{ display: "flex", gap: 10 }}>
+                                  <button onClick={async () => {
+                                    if(profile) {
+                                      await useMembersStore.getState().updateMemberProfile(profile.id, builderEditForm);
+                                    }
+                                    await updateAllowedUser(u.email, { designation: builderEditForm.designation, fullName: builderEditForm.fullName });
+                                    setEditingMemberId(null);
+                                  }} style={{ display: "flex", alignItems: "center", gap: 6, background: "#10B981", border: "none", borderRadius: 8, padding: "8px 14px", color: "white", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Save size={14} /> Save</button>
+                                  <button onClick={() => setEditingMemberId(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "white", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 14px", color: "var(--text-secondary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><X size={14} /> Cancel</button>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={u.email} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px", borderRadius: 12, background: "white", border: "1px solid var(--border-strong)" }}>
+                              <div style={{ width: 40, height: 40, borderRadius: "50%", background: profile?.photoURL ? `url(${profile.photoURL}) center/cover` : `linear-gradient(135deg, ${rc.color}, ${rc.color}99)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "white", flexShrink: 0 }}>
+                                {!profile?.photoURL && (u.fullName?.[0] || u.email[0].toUpperCase())}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+                                  {u.fullName || u.email}
+                                  {!profile && <span style={{ fontSize: 10, background: "var(--warning-light)", color: "var(--warning)", padding: "2px 6px", borderRadius: 6, fontWeight: 800 }}>PENDING LOGIN</span>}
+                                </div>
+                                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 6, background: rc.bg, color: rc.color }}>{rc.label}</span>
+                                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{u.designation}</span>
+                                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{u.email}</span>
+                                </div>
+                              </div>
+                              <button onClick={() => {
+                                setEditingMemberId(profile?.id ?? u.email);
+                                setBuilderEditForm({ fullName: profile?.fullName ?? u.fullName, designation: profile?.designation ?? u.designation });
+                              }} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: 6 }}><Edit3 size={16} /></button>
+                              <button onClick={() => { if(confirm("Remove from whitelist?")) removeAllowedUser(u.email); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 6 }}><XCircle size={16} /></button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Add Member Form */}
+                    {addingMemberToTeam === team.id ? (
+                      <div style={{ padding: 16, border: "1px dashed var(--brand)", borderRadius: 12, background: "var(--brand-glow)" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                          <input value={newMemberForm.fullName} onChange={e => setNewMemberForm(f => ({...f, fullName: e.target.value}))} placeholder="Full Name" style={inputSt} />
+                          <input value={newMemberForm.email} onChange={e => setNewMemberForm(f => ({...f, email: e.target.value}))} placeholder="Email (@mbcet.ac.in)" style={inputSt} />
+                          <select value={newMemberForm.role} onChange={e => setNewMemberForm(f => ({...f, role: e.target.value as UserRole}))} style={selectSt}>
+                            {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          </select>
+                          <input value={newMemberForm.designation} onChange={e => setNewMemberForm(f => ({...f, designation: e.target.value}))} placeholder="Designation" style={inputSt} />
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={async () => {
+                            if(!newMemberForm.email || !newMemberForm.fullName || !newMemberForm.designation) return;
+                            await addAllowedUser({
+                              email: newMemberForm.email.toLowerCase().trim(),
+                              role: newMemberForm.role,
+                              designation: newMemberForm.designation,
+                              fullName: newMemberForm.fullName,
+                              teamId: team.id,
+                              isActive: true,
+                              addedBy: user?.id ?? "admin"
+                            });
+                            setAddingMemberToTeam(null);
+                            setNewMemberForm({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
+                          }} style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer" }}>Add Member</button>
+                          <button onClick={() => setAddingMemberToTeam(null)} style={{ background: "transparent", color: "var(--text-secondary)", border: "none", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setAddingMemberToTeam(team.id)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "var(--brand)", background: "var(--brand-glow)", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
+                        <PlusCircle size={16} /> Add Member to Team
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

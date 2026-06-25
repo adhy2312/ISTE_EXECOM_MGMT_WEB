@@ -12,7 +12,7 @@ import '../controllers/auth_controller.dart';
 import '../core/theme.dart';
 
 class DigitalIdScreen extends ConsumerStatefulWidget {
-  const DigitalIdScreen({Key? key}) : super(key: key);
+  const DigitalIdScreen({super.key});
 
   @override
   ConsumerState<DigitalIdScreen> createState() => _DigitalIdScreenState();
@@ -27,7 +27,8 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
       final directory = await getApplicationDocumentsDirectory();
       final imagePath = await File('${directory.path}/digital_id.png').create();
       await imagePath.writeAsBytes(image);
-      await Share.shareXFiles([XFile(imagePath.path)], text: 'My ISTE MBCET ExeCom Digital ID');
+      await Share.shareXFiles([XFile(imagePath.path)],
+          text: 'My ISTE MBCET ExeCom Digital ID');
     }
   }
 
@@ -36,7 +37,8 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
     final currentUser = ref.watch(authProvider);
 
     if (currentUser == null) {
-      return const Center(child: Text('No Active User', style: TextStyle(color: Colors.white)));
+      return const Center(
+          child: Text('No Active User', style: TextStyle(color: Colors.white)));
     }
 
     final qrData = jsonEncode({
@@ -72,10 +74,12 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceDark,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.3), width: 2),
+                    border: Border.all(
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.3),
+                        width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -87,12 +91,16 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         decoration: const BoxDecoration(
                           color: AppTheme.backgroundDark,
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(22)),
                         ),
                         child: Center(
                           child: Text(
                             'ISTE SC MBCET',
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineLarge
+                                ?.copyWith(
                                   color: AppTheme.primaryBlue,
                                   letterSpacing: 2,
                                 ),
@@ -119,35 +127,49 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
                             const SizedBox(height: 32),
                             Text(
                               currentUser.fullName,
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 6),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryBlue.withOpacity(0.1),
+                                color:
+                                    AppTheme.primaryBlue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.5)),
+                                border: Border.all(
+                                    color: AppTheme.primaryBlue
+                                        .withValues(alpha: 0.5)),
                               ),
                               child: Text(
                                 currentUser.designation.toUpperCase(),
-                                style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, letterSpacing: 1),
+                                style: const TextStyle(
+                                    color: AppTheme.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1),
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               currentUser.branchBatch,
-                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+                              style: const TextStyle(
+                                  color: AppTheme.textSecondary, fontSize: 16),
                             ),
                             const SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.verified, color: AppTheme.successGreen, size: 20),
+                                const Icon(Icons.verified,
+                                    color: AppTheme.successGreen, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   'VALID: ${DateTime.now().year}-${DateTime.now().year + 1}',
-                                  style: const TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      color: AppTheme.successGreen,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -165,8 +187,10 @@ class _DigitalIdScreenState extends ConsumerState<DigitalIdScreen> {
                 label: const Text('Save / Share as Image'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryBlue,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
               ),
             ],

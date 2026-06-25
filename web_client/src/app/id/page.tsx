@@ -83,13 +83,28 @@ export default function IDPage() {
           </div>
 
           {/* Body */}
-          <div style={{ padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+            {/* Profile Picture */}
+            <div style={{
+              width: 100, height: 100, borderRadius: "50%",
+              background: user.photoURL ? `url(${user.photoURL}) center/cover` : "linear-gradient(135deg, var(--brand), #4338CA)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 36, fontWeight: 800, color: "white",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+              border: "4px solid white",
+              marginTop: "-60px", // Float above header
+              marginBottom: "20px",
+              position: "relative", zIndex: 2
+            }}>
+              {!user.photoURL && user.fullName.charAt(0).toUpperCase()}
+            </div>
+
             <div style={{ 
-              backgroundColor: "white", padding: "16px", borderRadius: "16px",
-              marginBottom: "32px", border: "1px solid var(--border-strong)",
+              backgroundColor: "white", padding: "12px", borderRadius: "16px",
+              marginBottom: "24px", border: "1px solid var(--border-strong)",
               boxShadow: "0 8px 24px rgba(0,0,0,0.04)"
             }}>
-              <QRCode value={qrData} size={180} fgColor="#1E293B" />
+              <QRCode value={qrData} size={140} fgColor="#1E293B" />
             </div>
 
             <h2 style={{ fontSize: "24px", fontWeight: "800", marginBottom: "8px", textAlign: "center", color: "var(--text-primary)" }}>

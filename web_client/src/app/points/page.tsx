@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/auth";
 import { usePointsStore } from "@/store/points";
-import { EnergyPointStatus } from "@/types/models";
+import { EnergyPointStatus, UserRole } from "@/types/models";
 import gsap from "gsap";
 import { Zap, Plus, Clock, CheckCircle2, XCircle, ExternalLink, AlertTriangle } from "lucide-react";
 import { EnergyPointRequestSchema, validatePayload } from "@/lib/schemas";
@@ -28,6 +28,8 @@ export default function PointsPage() {
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
 
   useEffect(() => {
     if (user) fetchMyRequests(user.id);
@@ -105,20 +107,24 @@ export default function PointsPage() {
             </div>
             Energy Points
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 8, fontWeight: 500 }}>Log your contributions and earn Core XP</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 8, fontWeight: 500 }}>
+            {isAdmin ? "Monitor and approve points in the Command Center." : "Log your contributions and earn Core XP"}
+          </p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white",
-            border: "none", borderRadius: 12, padding: "10px 16px",
-            fontSize: 13, fontWeight: 700, cursor: "pointer",
-            boxShadow: "0 4px 14px var(--brand-glow)"
-          }}
-        >
-          <Plus size={16} /> Apply
-        </button>
+        {!isAdmin && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white",
+              border: "none", borderRadius: 12, padding: "10px 16px",
+              fontSize: 13, fontWeight: 700, cursor: "pointer",
+              boxShadow: "0 4px 14px var(--brand-glow)"
+            }}
+          >
+            <Plus size={16} /> Apply
+          </button>
+        )}
       </div>
 
       {/* My Stats */}
@@ -136,12 +142,12 @@ export default function PointsPage() {
       {/* Success Banner */}
       {success && (
         <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 14, padding: "14px 18px", marginBottom: 18, color: "#059669", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
-          <CheckCircle2 size={18} /> Request submitted! Awaiting Chairperson review.
+          <CheckCircle2 size={18} /> Request submitted! Awaiting PR Head review.
         </div>
       )}
 
       {/* Submission Form */}
-      {showForm && (
+      {showForm && !isAdmin && (
         <div className="glass-panel fade-up" style={{ padding: 24, marginBottom: 24, border: "2px solid var(--brand-glow)" }}>
           <h3 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, marginBottom: 20, color: "var(--text-primary)" }}>New Point Request</h3>
           {errorMsg && (

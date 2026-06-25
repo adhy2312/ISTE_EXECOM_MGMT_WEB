@@ -5,13 +5,12 @@ import { useAuthStore } from "@/store/auth";
 import { useMembersStore } from "@/store/members";
 import { useTasksStore } from "@/store/tasks";
 import { useDashboardStore } from "@/store/dashboard";
-import { UserRole } from "@/types/models";
+
 import gsap from "gsap";
 import {
-  BarChart2, Users, CheckSquare, Calendar,
+  Users, CheckSquare, Calendar,
   TrendingUp, Award, BookOpen, LogOut
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function FacultyPage() {

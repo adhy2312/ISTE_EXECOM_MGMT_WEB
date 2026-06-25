@@ -15,12 +15,12 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: Colors.transparent, // Let AnimatedGradientBg shine through
+      scaffoldBackgroundColor:
+          Colors.transparent, // Let AnimatedGradientBg shine through
       colorScheme: const ColorScheme.dark(
         primary: primaryBlue,
         secondary: accentNeon,
         surface: surfaceDark,
-        background: backgroundDark,
         error: Color(0xFFEF4444),
         onPrimary: Colors.white,
         onSurface: textPrimary,

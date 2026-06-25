@@ -8,18 +8,19 @@ class ClayContainer extends StatefulWidget {
   final Color? surfaceColor;
 
   const ClayContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.onTap,
     this.borderRadius = 20.0,
     this.surfaceColor,
-  }) : super(key: key);
+  });
 
   @override
   State<ClayContainer> createState() => _ClayContainerState();
 }
 
-class _ClayContainerState extends State<ClayContainer> with SingleTickerProviderStateMixin {
+class _ClayContainerState extends State<ClayContainer>
+    with SingleTickerProviderStateMixin {
   bool _isPressed = false;
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -68,10 +69,10 @@ class _ClayContainerState extends State<ClayContainer> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final baseColor = widget.surfaceColor ?? AppTheme.surfaceDark;
-    
+
     // Create dark and light shadow colors based on the background to ensure it looks soft
-    final darkShadow = Colors.black.withOpacity(0.5);
-    final lightShadow = Colors.white.withOpacity(0.05);
+    final darkShadow = Colors.black.withValues(alpha: 0.5);
+    final lightShadow = Colors.white.withValues(alpha: 0.05);
 
     return GestureDetector(
       onTapDown: _handleTapDown,

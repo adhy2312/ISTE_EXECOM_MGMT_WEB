@@ -1,99 +1,107 @@
 import { create } from 'zustand';
-import { ExecomMember, UserRole, UserStatus } from '@/types/models';
+import { ExecomMember, Team } from '@/types/models';
+import { collection, getDocs, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 
 interface MembersState {
   members: ExecomMember[];
+  teams: Team[];
   isLoading: boolean;
+  error: string | null;
   fetchMembers: () => Promise<void>;
+  fetchTeams: () => Promise<void>;
+  createTeam: (name: string, description: string, leaderId?: string | null) => Promise<void>;
+  deleteTeam: (teamId: string) => Promise<void>;
+  updateMemberProfile: (uid: string, updates: Partial<ExecomMember>) => Promise<void>;
+  uploadProfilePicture: (uid: string, file: File) => Promise<string>;
 }
-
-const MOCK_MEMBERS: ExecomMember[] = [
-  {
-    id: '1',
-    fullName: 'Adhit V',
-    email: 'adhit@mbcet.ac.in',
-    branchBatch: 'CS2020',
-    department: 'CS',
-    contact: '9876543210',
-    skills: ['Flutter', 'Next.js'],
-    areasOfExpertise: 'Web Dev',
-    socialLinks: {},
-    role: UserRole.chapterAdmin,
-    designation: 'Chairperson',
-    activeStatus: UserStatus.active,
-    corePoints: 1250
-  },
-  {
-    id: '2',
-    fullName: 'Elena G',
-    email: 'elena@mbcet.ac.in',
-    branchBatch: 'CS2021',
-    department: 'CS',
-    contact: '1234567890',
-    skills: ['Figma', 'UI/UX'],
-    areasOfExpertise: 'Design',
-    socialLinks: {},
-    role: UserRole.prMedia,
-    designation: 'Design Head',
-    activeStatus: UserStatus.active,
-    corePoints: 980
-  },
-  {
-    id: '3',
-    fullName: 'Rahul K',
-    email: 'rahul@mbcet.ac.in',
-    branchBatch: 'EC2020',
-    department: 'EC',
-    contact: '9988776655',
-    skills: ['Python', 'AI'],
-    areasOfExpertise: 'Machine Learning',
-    socialLinks: {},
-    role: UserRole.techHead,
-    designation: 'Tech Head',
-    activeStatus: UserStatus.active,
-    corePoints: 1120
-  },
-  {
-    id: '4',
-    fullName: 'Sarah T',
-    email: 'sarah@mbcet.ac.in',
-    branchBatch: 'CE2022',
-    department: 'CE',
-    contact: '7788994455',
-    skills: ['Management', 'Speaking'],
-    areasOfExpertise: 'Event Mgt',
-    socialLinks: {},
-    role: UserRole.generalMember,
-    designation: 'General Member',
-    activeStatus: UserStatus.active,
-    corePoints: 450
-  },
-  {
-    id: '5',
-    fullName: 'Mike W',
-    email: 'mike@mbcet.ac.in',
-    branchBatch: 'EE2021',
-    department: 'EE',
-    contact: '1122334455',
-    skills: ['Hardware', 'IoT'],
-    areasOfExpertise: 'IoT',
-    socialLinks: {},
-    role: UserRole.generalMember,
-    designation: 'General Member',
-    activeStatus: UserStatus.active,
-    corePoints: 320
-  }
-];
 
 export const useMembersStore = create<MembersState>((set) => ({
   members: [],
+  teams: [],
   isLoading: false,
+  error: null,
+
   fetchMembers: async () => {
-    set({ isLoading: true });
-    // mock delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    // sort by points desc
-    const sorted = [...MOCK_MEMBERS].sort((a, b) => b.corePoints - a.corePoints);
-    set({ members: sorted, isLoading: false });
-  }
+    set({ isLoading: true, error: null });
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      const members = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as ExecomMember))
+        .filter(m => !!m.fullName)
+        .sort((a, b) => b.corePoints - a.corePoints);
+      set({ members, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+    }
+  },
+
+  fetchTeams: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const snap = await getDocs(collection(db, 'teams'));
+      const teams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+      set({ teams, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+    }
+  },
+
+  createTeam: async (name, description, leaderId = null) => {
+    set({ isLoading: true, error: null });
+    try {
+      const newTeam = {
+        name, description, leaderId, memberIds: [] as string[], createdAt: new Date().toISOString()
+      };
+      const docRef = await addDoc(collection(db, 'teams'), newTeam);
+      set(state => ({ teams: [...state.teams, { id: docRef.id, ...newTeam } as Team], isLoading: false }));
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+      throw e;
+    }
+  },
+
+  deleteTeam: async (teamId) => {
+    set({ isLoading: true, error: null });
+    try {
+      await deleteDoc(doc(db, 'teams', teamId));
+      set(state => ({ teams: state.teams.filter(t => t.id !== teamId), isLoading: false }));
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+      throw e;
+    }
+  },
+
+  updateMemberProfile: async (uid, updates) => {
+    set({ isLoading: true, error: null });
+    try {
+      await updateDoc(doc(db, 'users', uid), updates as Record<string, unknown>);
+      set(state => ({
+        members: state.members.map(m => m.id === uid ? { ...m, ...updates } : m),
+        isLoading: false,
+      }));
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+      throw e;
+    }
+  },
+
+  uploadProfilePicture: async (uid, file) => {
+    set({ isLoading: true, error: null });
+    try {
+      const storageRef = ref(storage, `profiles/${uid}/${file.name}`);
+      await uploadBytes(storageRef, file);
+      const photoURL = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, 'users', uid), { photoURL });
+      set(state => ({
+        members: state.members.map(m => m.id === uid ? { ...m, photoURL } : m),
+        isLoading: false,
+      }));
+      return photoURL;
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+      throw e;
+    }
+  },
 }));

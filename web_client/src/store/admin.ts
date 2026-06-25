@@ -8,25 +8,40 @@ import {
   updateDoc,
   onSnapshot,
   Unsubscribe,
+  query,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { AllowedUser, UserRole } from '@/types/models';
 
 interface AdminState {
   allowedUsers: AllowedUser[];
+  auditLogs: AuditLog[];
   isLoading: boolean;
   error: string | null;
   // Fetch & subscribe
   subscribeToAllowedUsers: () => Unsubscribe;
   fetchAllowedUsers: () => Promise<void>;
+  fetchAuditLogs: () => Promise<void>;
   // CRUD
-  addAllowedUser: (data: Omit<AllowedUser, 'addedAt'> & { addedBy: string }) => Promise<void>;
-  updateAllowedUser: (email: string, updates: Partial<Pick<AllowedUser, 'role' | 'designation' | 'isActive'>>) => Promise<void>;
+  addAllowedUser: (data: Omit<AllowedUser, 'addedAt'>) => Promise<void>;
+  updateAllowedUser: (email: string, updates: Partial<AllowedUser>) => Promise<void>;
   removeAllowedUser: (email: string) => Promise<void>;
+}
+
+export interface AuditLog {
+  id: string;
+  adminId: string;
+  action: string;
+  targetId: string;
+  awardedPoints?: number;
+  timestamp: string;
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
   allowedUsers: [],
+  auditLogs: [],
   isLoading: false,
   error: null,
 
@@ -58,8 +73,20 @@ export const useAdminStore = create<AdminState>((set) => ({
         return a.email.localeCompare(b.email);
       });
       set({ allowedUsers: users, isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+    }
+  },
+
+  fetchAuditLogs: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(50));
+      const snap = await getDocs(q);
+      const logs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AuditLog));
+      set({ auditLogs: logs, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
     }
   },
 
@@ -73,8 +100,8 @@ export const useAdminStore = create<AdminState>((set) => ({
         addedAt: new Date().toISOString(),
       });
       set({ isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },
@@ -85,8 +112,8 @@ export const useAdminStore = create<AdminState>((set) => ({
       const emailKey = email.toLowerCase().trim();
       await updateDoc(doc(db, 'allowedUsers', emailKey), updates);
       set({ isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },
@@ -97,8 +124,8 @@ export const useAdminStore = create<AdminState>((set) => ({
       const emailKey = email.toLowerCase().trim();
       await deleteDoc(doc(db, 'allowedUsers', emailKey));
       set({ isLoading: false });
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
       throw e;
     }
   },

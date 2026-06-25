@@ -6,7 +6,7 @@ import '../../models/meeting.dart';
 import '../../core/theme.dart';
 
 class MeetingManagementScreen extends ConsumerWidget {
-  const MeetingManagementScreen({Key? key}) : super(key: key);
+  const MeetingManagementScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,10 +23,15 @@ class MeetingManagementScreen extends ConsumerWidget {
               final newMeeting = Meeting(
                 title: 'General Body Meeting',
                 date: DateTime.now().add(const Duration(days: 2)),
-                agenda: 'Discuss Techfest sponsorships and volunteer allocation.',
+                agenda:
+                    'Discuss Techfest sponsorships and volunteer allocation.',
                 actionItems: [
-                  MeetingActionItem(description: 'Finalize sponsor deck', assignedToId: 'member-003'),
-                  MeetingActionItem(description: 'Book main auditorium', assignedToId: 'member-002'),
+                  MeetingActionItem(
+                      description: 'Finalize sponsor deck',
+                      assignedToId: 'member-003'),
+                  MeetingActionItem(
+                      description: 'Book main auditorium',
+                      assignedToId: 'member-002'),
                 ],
               );
               ref.read(meetingsProvider.notifier).addMeeting(newMeeting);
@@ -40,7 +45,9 @@ class MeetingManagementScreen extends ConsumerWidget {
         error: (err, st) => Center(child: Text('Error: $err')),
         data: (meetings) {
           if (meetings.isEmpty) {
-            return const Center(child: Text('No meetings scheduled.', style: TextStyle(color: AppTheme.textSecondary)));
+            return const Center(
+                child: Text('No meetings scheduled.',
+                    style: TextStyle(color: AppTheme.textSecondary)));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -54,13 +61,16 @@ class MeetingManagementScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMeetingCard(BuildContext context, WidgetRef ref, Meeting meeting) {
+  Widget _buildMeetingCard(
+      BuildContext context, WidgetRef ref, Meeting meeting) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ExpansionTile(
-        title: Text(meeting.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('Scheduled: ${meeting.date.month}/${meeting.date.day}', style: const TextStyle(color: AppTheme.primaryBlue)),
+        title: Text(meeting.title,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text('Scheduled: ${meeting.date.month}/${meeting.date.day}',
+            style: const TextStyle(color: AppTheme.primaryBlue)),
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -71,33 +81,61 @@ class MeetingManagementScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Agenda', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                const Text('Agenda',
+                    style:
+                        TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 const SizedBox(height: 4),
                 Text(meeting.agenda),
                 const SizedBox(height: 16),
-                const Text('Action Items (Tap to convert to Tasks)', style: TextStyle(color: AppTheme.accentNeon, fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text('Action Items (Tap to convert to Tasks)',
+                    style: TextStyle(
+                        color: AppTheme.accentNeon,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 if (meeting.actionItems.isEmpty)
-                  const Text('No action items.', style: TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic)),
+                  const Text('No action items.',
+                      style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontStyle: FontStyle.italic)),
                 ...meeting.actionItems.map((item) {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
-                      item.linkedTaskId != null ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: item.linkedTaskId != null ? AppTheme.successGreen : AppTheme.textSecondary,
+                      item.linkedTaskId != null
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color: item.linkedTaskId != null
+                          ? AppTheme.successGreen
+                          : AppTheme.textSecondary,
                     ),
-                    title: Text(item.description, style: TextStyle(decoration: item.linkedTaskId != null ? TextDecoration.lineThrough : null)),
-                    subtitle: Text(item.linkedTaskId != null ? 'Converted to Task' : 'Assigned: ${item.assignedToId}'),
-                    onTap: item.linkedTaskId != null ? null : () async {
-                      // Convert to Task!
-                      final authUser = ref.read(authProvider);
-                      if (authUser != null) {
-                        await ref.read(meetingsProvider.notifier).convertActionItemToTask(meeting, item, authUser.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Action item converted to matrix task!', style: TextStyle(color: AppTheme.successGreen))),
-                        );
-                      }
-                    },
+                    title: Text(item.description,
+                        style: TextStyle(
+                            decoration: item.linkedTaskId != null
+                                ? TextDecoration.lineThrough
+                                : null)),
+                    subtitle: Text(item.linkedTaskId != null
+                        ? 'Converted to Task'
+                        : 'Assigned: ${item.assignedToId}'),
+                    onTap: item.linkedTaskId != null
+                        ? null
+                        : () async {
+                            // Convert to Task!
+                            final authUser = ref.read(authProvider);
+                            if (authUser != null) {
+                              await ref
+                                  .read(meetingsProvider.notifier)
+                                  .convertActionItemToTask(
+                                      meeting, item, authUser.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Action item converted to matrix task!',
+                                        style: TextStyle(
+                                            color: AppTheme.successGreen))),
+                              );
+                            }
+                          },
                   );
                 }),
                 const SizedBox(height: 16),

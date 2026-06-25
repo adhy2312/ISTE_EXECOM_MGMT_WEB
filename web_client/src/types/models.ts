@@ -29,6 +29,8 @@ export interface ExecomMember {
   designation: string;
   activeStatus: UserStatus;
   corePoints: number;
+  photoURL?: string;
+  teamId?: string;
 }
 
 export enum TaskState {
@@ -97,6 +99,10 @@ export interface AllowedUser {
   email: string;           // Firestore document ID (lowercase email)
   role: UserRole;
   designation: string;
+  fullName?: string;
+  teamId?: string;
+  branchBatch?: string;
+  department?: string;
   addedBy: string;         // UID or 'seed-script'
   addedAt: string;         // ISO string
   isActive: boolean;
@@ -122,4 +128,30 @@ export interface Team {
   leaderId: string | null; // UID of the team lead
   memberIds: string[];    // Array of UIDs
   createdAt: string;      // ISO string
+}
+
+// ─── Performance Evaluation ─────────────────────────────────────────────────
+
+export interface EvaluationScore {
+  memberId: string;
+  departmentScore: number;    // 0–6
+  initiativeScore: number;    // 0–2
+  reliabilityScore: number;   // 0–1
+  attendanceScore: number;    // 0–1
+  totalScore: number;         // sum of above, 0–10
+  lastUpdated: string;        // ISO string
+  updatedBy: string;          // admin uid
+}
+
+export type ContributionStatus = 'pending' | 'verified' | 'rejected';
+
+export interface ContributionEntry {
+  id: string;
+  memberId: string;
+  date: string;               // e.g. "2026-06-25"
+  task: string;               // description of what was done
+  proofUrl: string;           // drive / github link
+  submittedAt: string;        // ISO string
+  status: ContributionStatus;
+  adminNote?: string;
 }

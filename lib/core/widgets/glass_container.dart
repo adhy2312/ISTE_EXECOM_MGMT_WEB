@@ -10,14 +10,14 @@ class GlassContainer extends StatelessWidget {
   final Color baseColor;
 
   const GlassContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.width = double.infinity,
     this.height = double.infinity,
     this.borderRadius = 24.0,
     this.padding = const EdgeInsets.all(16.0),
     this.baseColor = Colors.white,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,18 +30,18 @@ class GlassContainer extends StatelessWidget {
           height: height == double.infinity ? null : height,
           padding: padding,
           decoration: BoxDecoration(
-            color: baseColor.withOpacity(0.05),
+            color: baseColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: baseColor.withOpacity(0.2),
+              color: baseColor.withValues(alpha: 0.2),
               width: 1.5,
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                baseColor.withOpacity(0.15),
-                baseColor.withOpacity(0.05),
+                baseColor.withValues(alpha: 0.15),
+                baseColor.withValues(alpha: 0.05),
               ],
             ),
           ),

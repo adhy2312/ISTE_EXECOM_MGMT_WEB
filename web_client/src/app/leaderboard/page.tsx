@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useMembersStore } from "@/store/members";
 import gsap from "gsap";
-import { Trophy, TrendingUp, Award } from "lucide-react";
+import { Trophy, Award } from "lucide-react";
+import { ExecomMember } from "@/types/models";
 
 export default function LeaderboardPage() {
   const { members, isLoading, fetchMembers } = useMembersStore();
@@ -96,7 +97,7 @@ export default function LeaderboardPage() {
   );
 }
 
-function PodiumMember({ member, rank, color }: { member: any, rank: number, color: any }) {
+function PodiumMember({ member, rank, color }: { member: ExecomMember, rank: number, color: { bg: string, border: string, text: string, glow: string } }) {
   const size = rank === 1 ? 100 : rank === 2 ? 80 : 70;
   
   return (

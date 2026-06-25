@@ -85,7 +85,7 @@ export default function TasksPage() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as TaskState | 'all')}
             style={{
               padding: "10px 18px",
               borderRadius: "12px",

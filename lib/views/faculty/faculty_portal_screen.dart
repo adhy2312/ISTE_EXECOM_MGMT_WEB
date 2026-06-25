@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 
 class FacultyPortalScreen extends StatefulWidget {
-  const FacultyPortalScreen({Key? key}) : super(key: key);
+  const FacultyPortalScreen({super.key});
 
   @override
   State<FacultyPortalScreen> createState() => _FacultyPortalScreenState();
@@ -56,20 +56,20 @@ class _FacultyPortalScreenState extends State<FacultyPortalScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Chapter Metrics Suite', style: Theme.of(context).textTheme.headlineLarge),
+            Text('Chapter Metrics Suite',
+                style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 16),
             _buildMetricsGrid(),
-            
             const SizedBox(height: 32),
-            Text('Live Event Tracker', style: Theme.of(context).textTheme.headlineLarge),
+            Text('Live Event Tracker',
+                style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 16),
             _buildLiveEventTracker(),
-
             const SizedBox(height: 32),
-            Text('Meeting Minutes (MoM) Repository', style: Theme.of(context).textTheme.headlineLarge),
+            Text('Meeting Minutes (MoM) Repository',
+                style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 16),
             _buildMoMRepository(),
-
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: _signOffReport,
@@ -97,7 +97,8 @@ class _FacultyPortalScreenState extends State<FacultyPortalScreen> {
       children: [
         _buildMetricCard('Total Registrations', '452', Icons.groups),
         _buildMetricCard('Task Velocity', '87%', Icons.speed),
-        _buildMetricCard('Pending Budget', '₹12,400', Icons.account_balance_wallet),
+        _buildMetricCard(
+            'Pending Budget', '₹12,400', Icons.account_balance_wallet),
         _buildMetricCard('Audit Verifications', '3', Icons.fact_check),
       ],
     );
@@ -115,9 +116,16 @@ class _FacultyPortalScreenState extends State<FacultyPortalScreen> {
         children: [
           Icon(icon, color: AppTheme.accentNeon, size: 28),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
           const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary), textAlign: TextAlign.center),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+              textAlign: TextAlign.center),
         ],
       ),
     );
@@ -130,27 +138,35 @@ class _FacultyPortalScreenState extends State<FacultyPortalScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.5)),
+        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Current Hall Capacity', style: TextStyle(color: AppTheme.textSecondary)),
-              Text('$_currentHallCapacity / $_maxCapacity', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentNeon)),
+              const Text('Current Hall Capacity',
+                  style: TextStyle(color: AppTheme.textSecondary)),
+              Text('$_currentHallCapacity / $_maxCapacity',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: AppTheme.accentNeon)),
             ],
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: progress,
             backgroundColor: AppTheme.backgroundDark,
-            color: progress > 0.8 ? AppTheme.warningOrange : AppTheme.successGreen,
+            color:
+                progress > 0.8 ? AppTheme.warningOrange : AppTheme.successGreen,
             minHeight: 12,
             borderRadius: BorderRadius.circular(6),
           ),
           const SizedBox(height: 8),
-          const Text('Live updates from entry scanners...', style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: AppTheme.textSecondary)),
+          const Text('Live updates from entry scanners...',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                  color: AppTheme.textSecondary)),
         ],
       ),
     );
@@ -170,7 +186,10 @@ class _FacultyPortalScreenState extends State<FacultyPortalScreen> {
             color: AppTheme.backgroundDark,
             child: const Text(
               "## Minutes of Meeting\n\n- **Date:** Aug 15\n- **Attendees:** 45\n- **Agenda:** Techfest planning.\n- **Resolution:** Budget approved.",
-              style: TextStyle(fontFamily: 'monospace', color: AppTheme.textPrimary, fontSize: 12),
+              style: TextStyle(
+                  fontFamily: 'monospace',
+                  color: AppTheme.textPrimary,
+                  fontSize: 12),
             ),
           )
         ],

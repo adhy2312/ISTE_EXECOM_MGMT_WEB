@@ -16,7 +16,7 @@ import '../controllers/auth_controller.dart';
 import '../models/execom_member.dart';
 
 class MainLayout extends ConsumerStatefulWidget {
-  const MainLayout({Key? key}) : super(key: key);
+  const MainLayout({super.key});
 
   @override
   ConsumerState<MainLayout> createState() => _MainLayoutState();
@@ -73,7 +73,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           flexibleSpace: ClipRRect(
             child: BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: AppTheme.surfaceDark.withOpacity(0.5)),
+              child: Container(color: AppTheme.surfaceDark.withValues(alpha: 0.5)),
             ),
           ),
           actions: [
@@ -98,13 +98,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -5)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, -5)),
             ],
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
-            backgroundColor: AppTheme.surfaceDark.withOpacity(0.8),
+            backgroundColor: AppTheme.surfaceDark.withValues(alpha: 0.8),
             selectedItemColor: AppTheme.accentNeon,
             unselectedItemColor: AppTheme.textSecondary,
             type: BottomNavigationBarType.fixed,

@@ -5,7 +5,7 @@ import '../../controllers/task_controller.dart';
 import '../../core/theme.dart';
 
 class TaskGodModeScreen extends ConsumerWidget {
-  const TaskGodModeScreen({Key? key}) : super(key: key);
+  const TaskGodModeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -14,7 +14,8 @@ class TaskGodModeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       appBar: AppBar(
-        title: const Text('Task Matrix Overrides', style: TextStyle(color: AppTheme.warningOrange)),
+        title: const Text('Task Matrix Overrides',
+            style: TextStyle(color: AppTheme.warningOrange)),
         backgroundColor: AppTheme.surfaceDark,
         elevation: 0,
       ),
@@ -22,7 +23,8 @@ class TaskGodModeScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(child: Text('Error: $err')),
         data: (tasks) {
-          if (tasks.isEmpty) return const Center(child: Text('No tasks found.'));
+          if (tasks.isEmpty)
+            return const Center(child: Text('No tasks found.'));
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: tasks.length,
@@ -31,27 +33,37 @@ class TaskGodModeScreen extends ConsumerWidget {
               return Card(
                 color: AppTheme.surfaceDark,
                 shape: RoundedRectangleBorder(
-                  side: const BorderSide(color: AppTheme.warningOrange, width: 0.5),
+                  side: const BorderSide(
+                      color: AppTheme.warningOrange, width: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  title: Text(t.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Status: ${t.state.name} • Points: ${t.bountyPoints}'),
+                  title: Text(t.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                      'Status: ${t.state.name} • Points: ${t.bountyPoints}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (t.state != TaskState.completed)
                         IconButton(
-                          icon: const Icon(Icons.done_all, color: AppTheme.successGreen),
+                          icon: const Icon(Icons.done_all,
+                              color: AppTheme.successGreen),
                           onPressed: () {
-                            ref.read(tasksProvider.notifier).updateTaskState(t.id, TaskState.completed);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task forcefully completed!')));
+                            ref
+                                .read(tasksProvider.notifier)
+                                .updateTaskState(t.id, TaskState.completed);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Task forcefully completed!')));
                           },
                           tooltip: 'Force Complete',
                         ),
                       IconButton(
-                        icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                        icon: const Icon(Icons.delete_forever,
+                            color: Colors.redAccent),
                         onPressed: () {
                           // God mode annihilation
                           _showDeleteConfirm(context, ref, t);
@@ -73,18 +85,22 @@ class TaskGodModeScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Destroy Task?', style: TextStyle(color: Colors.redAccent)),
+        title: const Text('Destroy Task?',
+            style: TextStyle(color: Colors.redAccent)),
         content: Text('Permanently delete "${t.title}" from the database?'),
         backgroundColor: AppTheme.surfaceDark,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () {
               ref.read(tasksProvider.notifier)._db.deleteTask(t.id);
               Navigator.pop(ctx);
             },
-            child: const Text('DESTROY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('DESTROY',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

@@ -1,33 +1,37 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isChapterAdmin() {
-      return request.auth != null && 
+      return request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'chapterAdmin';
     }
 
     function isFacultyAdvisor() {
-      return request.auth != null && 
+      return request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'facultyAdvisor';
     }
 
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if request.auth != null;
-      // Prevent user from setting their own role to chapterAdmin (Vertical Privilege Escalation prevention)
-      allow create: if request.auth != null && request.auth.uid == userId
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId
                     && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'member');
-      allow update: if request.auth != null && (
+      allow update: if isAuthenticated() && (
         (request.auth.uid == userId && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == resource.data.role))
         || isChapterAdmin()
       );
       allow delete: if isChapterAdmin();
     }
 
+    // ── Energy Point Requests ─────────────────────────────────────────────
     match /energyPointRequests/{requestId} {
-      allow read: if request.auth != null;
-      // Enforce rigid schema, string constraints, and integer bounds (NoSQL injection & malformed data prevention)
-      allow create: if request.auth != null 
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
                     && request.resource.data.memberId == request.auth.uid
                     && request.resource.data.keys().hasAll(['memberId', 'memberName', 'category', 'description', 'requestedPoints', 'status'])
                     && request.resource.data.description is string
@@ -38,24 +42,45 @@ service cloud.firestore {
       allow update, delete: if isChapterAdmin();
     }
 
+    // ── Tasks ─────────────────────────────────────────────────────────────
     match /tasks/{taskId} {
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
       allow create, update, delete: if isChapterAdmin();
     }
 
+    // ── Teams ─────────────────────────────────────────────────────────────
     match /teams/{teamId} {
       allow read: if request.auth != null;
       allow create, update, delete: if isChapterAdmin();
     }
 
-    // IMMUTABLE AUDIT LOGS
-    // Admins can create audit logs when they perform sensitive actions.
-    // NO ONE (not even admins) can update or delete them. This ensures non-repudiation.
+    // ── Audit Logs (IMMUTABLE) ────────────────────────────────────────────
     match /audit_logs/{logId} {
       allow read: if isChapterAdmin() || isFacultyAdvisor();
-      allow create: if isChapterAdmin() 
+      allow create: if isChapterAdmin()
                     && request.resource.data.keys().hasAll(['adminId', 'action', 'targetId', 'timestamp']);
       allow update, delete: if false; // Tamper-resistant!
+    }
+
+    // ── Contribution Log ──────────────────────────────────────────────────
+    // Members can read/create their own entries. Admin can read all and update status.
+    match /contributionLog/{memberId}/entries/{entryId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == memberId || isChapterAdmin() || isFacultyAdvisor()
+      );
+      allow create: if isAuthenticated()
+                    && request.auth.uid == memberId
+                    && request.resource.data.memberId == memberId
+                    && request.resource.data.keys().hasAll(['memberId', 'date', 'task', 'submittedAt', 'status'])
+                    && request.resource.data.status == 'pending';
+      allow update: if isChapterAdmin();
+      allow delete: if false; // Contribution log is permanent
+    }
+
+    // ── Allowed Users Whitelist ───────────────────────────────────────────
+    match /allowedUsers/{email} {
+      allow read: if isAuthenticated();
+      allow write: if isChapterAdmin();
     }
   }
 }

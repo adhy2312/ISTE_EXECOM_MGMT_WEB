@@ -5,7 +5,7 @@ import '../controllers/member_controller.dart';
 import '../core/theme.dart';
 
 class ChairpersonPanel extends ConsumerStatefulWidget {
-  const ChairpersonPanel({Key? key}) : super(key: key);
+  const ChairpersonPanel({super.key});
 
   @override
   ConsumerState<ChairpersonPanel> createState() => _ChairpersonPanelState();
@@ -71,30 +71,43 @@ class _ChairpersonPanelState extends ConsumerState<ChairpersonPanel> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
-                    validator: (val) => val == null || val.isEmpty ? 'Required field' : null,
+                    decoration: const InputDecoration(
+                        labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required field' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'College Email ID', prefixIcon: Icon(Icons.email)),
+                    decoration: const InputDecoration(
+                        labelText: 'College Email ID',
+                        prefixIcon: Icon(Icons.email)),
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required field';
-                      if (!val.endsWith('@mbcet.ac.in')) return 'Must be a valid @mbcet.ac.in email';
+                      if (!val.endsWith('@mbcet.ac.in'))
+                        return 'Must be a valid @mbcet.ac.in email';
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _branchController,
-                    decoration: const InputDecoration(labelText: 'Branch/Batch (e.g. S5 CS Alpha)', prefixIcon: Icon(Icons.class_)),
-                    validator: (val) => val == null || val.isEmpty ? 'Required field' : null,
+                    decoration: const InputDecoration(
+                        labelText: 'Branch/Batch (e.g. S5 CS Alpha)',
+                        prefixIcon: Icon(Icons.class_)),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required field' : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<UserRole>(
-                    value: _selectedRole,
-                    decoration: const InputDecoration(labelText: 'System Access Role', prefixIcon: Icon(Icons.security)),
-                    items: UserRole.values.map((r) => DropdownMenuItem(value: r, child: Text(r.name))).toList(),
+                    initialValue: _selectedRole,
+                    decoration: const InputDecoration(
+                        labelText: 'System Access Role',
+                        prefixIcon: Icon(Icons.security)),
+                    items: UserRole.values
+                        .map((r) =>
+                            DropdownMenuItem(value: r, child: Text(r.name)))
+                        .toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedRole = val);
                     },
@@ -102,17 +115,23 @@ class _ChairpersonPanelState extends ConsumerState<ChairpersonPanel> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _designationController,
-                    decoration: const InputDecoration(labelText: 'ISTE Designation', prefixIcon: Icon(Icons.badge)),
-                    validator: (val) => val == null || val.isEmpty ? 'Required field' : null,
+                    decoration: const InputDecoration(
+                        labelText: 'ISTE Designation',
+                        prefixIcon: Icon(Icons.badge)),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required field' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _pointsController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Initial Core Points', prefixIcon: Icon(Icons.stars)),
+                    decoration: const InputDecoration(
+                        labelText: 'Initial Core Points',
+                        prefixIcon: Icon(Icons.stars)),
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required field';
-                      if (int.tryParse(val) == null) return 'Must be an integer';
+                      if (int.tryParse(val) == null)
+                        return 'Must be an integer';
                       return null;
                     },
                   ),

@@ -7,14 +7,12 @@ import { useDashboardStore } from "@/store/dashboard";
 import { useTasksStore } from "@/store/tasks";
 import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuthStore();
   const { events, activities, isLoading: dashLoading, fetchDashboardData } = useDashboardStore();
   const { tasks, isLoading: tasksLoading, fetchTasks } = useTasksStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (user) {
@@ -69,22 +67,12 @@ export default function HomePage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(255,255,255,0.8))" }} />
-            <h1 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#fff" }}>ISTE<span style={{color: "#6366F1"}}>SC</span></h1>
+            <h1 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#fff" }}>ISTE SC <span style={{color: "#6366F1"}}>MBCET</span></h1>
           </div>
         </header>
 
         {/* Hero */}
         <main style={{ position: "relative", zIndex: 10, flex: 1, padding: "60px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-          <div className="stagger-in" style={{
-            background: "rgba(99, 102, 241, 0.1)", color: "#818CF8",
-            border: "1px solid rgba(99, 102, 241, 0.3)",
-            padding: "8px 16px", borderRadius: 30, fontSize: 11, fontWeight: 700,
-            textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 32,
-            boxShadow: "0 0 20px rgba(99, 102, 241, 0.2)",
-            backdropFilter: "blur(10px)"
-          }}>
-            SYSTEM INITIATED // V2.0
-          </div>
           
           <h2 className="stagger-in outfit-font" style={{ fontSize: "clamp(40px, 8vw, 64px)", lineHeight: 1.1, fontWeight: 900, marginBottom: 24, letterSpacing: "-0.02em", color: "#ffffff" }}>
             ORCHESTRATE THE <br />
@@ -130,7 +118,7 @@ export default function HomePage() {
           Good morning, {user.fullName.split(" ")[0]}
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: 15, marginTop: 4 }}>
-          Here's your society overview for today.
+          Here&apos;s your society overview for today.
         </p>
       </header>
 

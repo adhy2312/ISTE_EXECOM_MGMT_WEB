@@ -6,7 +6,7 @@ import '../models/leaderboard_snapshot.dart';
 import '../core/theme.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,22 +21,27 @@ class LeaderboardScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, st) => Center(child: Text('Error: $err')),
         data: (members) {
-          if (members.isEmpty) return const Center(child: Text('No members found.'));
+          if (members.isEmpty)
+            return const Center(child: Text('No members found.'));
 
           final snapshot = LeaderboardSnapshot(rankedMembers: members);
-          
+
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 24.0, horizontal: 16.0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      if (snapshot.podium.length > 1) _buildPodiumMember(snapshot.podium[1], 2),
-                      if (snapshot.podium.isNotEmpty) _buildPodiumMember(snapshot.podium[0], 1),
-                      if (snapshot.podium.length > 2) _buildPodiumMember(snapshot.podium[2], 3),
+                      if (snapshot.podium.length > 1)
+                        _buildPodiumMember(snapshot.podium[1], 2),
+                      if (snapshot.podium.isNotEmpty)
+                        _buildPodiumMember(snapshot.podium[0], 1),
+                      if (snapshot.podium.length > 2)
+                        _buildPodiumMember(snapshot.podium[2], 3),
                     ],
                   ),
                 ),
@@ -60,15 +65,24 @@ class LeaderboardScreen extends ConsumerWidget {
   Widget _buildPodiumMember(ExecomMember member, int rank) {
     List<Color> gradientColors;
     double avatarRadius;
-    
+
     if (rank == 1) {
-      gradientColors = [const Color(0xFFFFD700), const Color(0xFFFDB931)]; // Gold
+      gradientColors = [
+        const Color(0xFFFFD700),
+        const Color(0xFFFDB931)
+      ]; // Gold
       avatarRadius = 50;
     } else if (rank == 2) {
-      gradientColors = [const Color(0xFFC0C0C0), const Color(0xFFE5E4E2)]; // Silver
+      gradientColors = [
+        const Color(0xFFC0C0C0),
+        const Color(0xFFE5E4E2)
+      ]; // Silver
       avatarRadius = 40;
     } else {
-      gradientColors = [const Color(0xFFCD7F32), const Color(0xFF8B4513)]; // Bronze
+      gradientColors = [
+        const Color(0xFFCD7F32),
+        const Color(0xFF8B4513)
+      ]; // Bronze
       avatarRadius = 35;
     }
 
@@ -78,22 +92,24 @@ class LeaderboardScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(colors: gradientColors),
-            boxShadow: [
-              BoxShadow(
-                color: gradientColors[0].withOpacity(0.5),
-                blurRadius: 10,
-                spreadRadius: 2,
-              )
-            ]
-          ),
+              shape: BoxShape.circle,
+              gradient: LinearGradient(colors: gradientColors),
+              boxShadow: [
+                BoxShadow(
+                  color: gradientColors[0].withValues(alpha: 0.5),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                )
+              ]),
           child: CircleAvatar(
             radius: avatarRadius,
             backgroundColor: AppTheme.surfaceDark,
             child: Text(
               member.fullName.substring(0, 1).toUpperCase(),
-              style: TextStyle(fontSize: avatarRadius * 0.8, color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: avatarRadius * 0.8,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -104,7 +120,8 @@ class LeaderboardScreen extends ConsumerWidget {
         ),
         Text(
           '${member.corePoints} XP',
-          style: TextStyle(color: gradientColors[0], fontWeight: FontWeight.bold),
+          style:
+              TextStyle(color: gradientColors[0], fontWeight: FontWeight.bold),
         ),
         Container(
           margin: const EdgeInsets.only(top: 4),
@@ -113,7 +130,9 @@ class LeaderboardScreen extends ConsumerWidget {
             color: AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(member.designation, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+          child: Text(member.designation,
+              style:
+                  const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
         )
       ],
     );
@@ -122,17 +141,25 @@ class LeaderboardScreen extends ConsumerWidget {
   Widget _buildStandardMemberRow(ExecomMember member, int rank) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppTheme.surfaceDark.withOpacity(0.5),
+      color: AppTheme.surfaceDark.withValues(alpha: 0.5),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: AppTheme.backgroundDark,
-          child: Text('#$rank', style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+          child: Text('#$rank',
+              style: const TextStyle(
+                  color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
         ),
-        title: Text(member.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(member.designation, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+        title: Text(member.fullName,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(member.designation,
+            style:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         trailing: Text(
           '${member.corePoints} XP',
-          style: const TextStyle(color: AppTheme.accentNeon, fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(
+              color: AppTheme.accentNeon,
+              fontWeight: FontWeight.bold,
+              fontSize: 16),
         ),
       ),
     );

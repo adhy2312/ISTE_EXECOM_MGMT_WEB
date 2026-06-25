@@ -39,7 +39,7 @@ async function getWhitelistEntry(email: string) {
     return {
       email: key,
       role: UserRole.chapterAdmin,
-      designation: 'Chairperson',
+      designation: 'PR Head',
       isActive: true,
     };
   }
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             await signOut(auth);
             set({
               user: null, firebaseUser: null, isLoading: false,
-              error: 'Your account has not been provisioned. Contact the Chairperson to gain access.',
+              error: 'Your account has not been provisioned. Contact the PR Head to gain access.',
             });
             return;
           }
@@ -98,10 +98,11 @@ export const useAuthStore = create<AuthState>((set) => ({
             // Auto-create profile on first login using whitelist role
             const newUser: ExecomMember = {
               id: firebaseUser.uid,
-              fullName: firebaseUser.displayName ?? 'New Member',
+              fullName: whitelist.fullName || firebaseUser.displayName || 'New Member',
               email: firebaseUser.email ?? '',
-              branchBatch: '',
-              department: '',
+              branchBatch: whitelist.branchBatch || '',
+              department: whitelist.department || '',
+              teamId: whitelist.teamId || undefined,
               contact: '',
               skills: [],
               areasOfExpertise: '',
@@ -114,8 +115,8 @@ export const useAuthStore = create<AuthState>((set) => ({
             await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
             set({ user: newUser, isLoading: false });
           }
-        } catch (e: any) {
-          set({ error: e.message, isLoading: false });
+        } catch (e: unknown) {
+          set({ error: (e as Error).message, isLoading: false });
         }
       } else {
         set({ user: null, firebaseUser: null, isLoading: false });
@@ -134,13 +135,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as Error & { code?: string };
       const msg =
-        e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password'
+        err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
           ? 'Invalid email or password.'
-          : e.code === 'auth/user-not-found'
+          : err.code === 'auth/user-not-found'
           ? 'No account found with this email.'
-          : e.message;
+          : err.message;
       set({ error: msg, isLoading: false });
       throw e;
     }
@@ -158,9 +160,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ error: 'Only @mbcet.ac.in accounts are permitted.', isLoading: false });
         throw new Error('Domain not allowed');
       }
-    } catch (e: any) {
-      if (e.code !== 'auth/popup-closed-by-user') {
-        set({ error: e.message, isLoading: false });
+    } catch (e: unknown) {
+      const err = e as Error & { code?: string };
+      if (err.code !== 'auth/popup-closed-by-user') {
+        set({ error: err.message, isLoading: false });
       } else {
         set({ isLoading: false });
       }

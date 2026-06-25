@@ -4,18 +4,20 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { UserRole } from "@/types/models";
-import { Zap, CheckSquare, ShieldCheck } from "lucide-react";
+import { Zap, CheckSquare, ShieldCheck, AlertTriangle } from "lucide-react";
 import gsap from "gsap";
+
+const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
 
 type LoginMode = "admin" | "execom" | "faculty";
 
 const MODE: Record<LoginMode, { label: string; sub: string; color: string; dot: string; placeholder: string }> = {
   admin: {
     label: "Admin",
-    sub: "Chairperson & Executive Access",
+    sub: "PR Head & Executive Access",
     color: "#3730A3",
     dot: "#818CF8",
-    placeholder: "chairperson@mbcet.ac.in",
+    placeholder: "prhead@mbcet.ac.in",
   },
   execom: {
     label: "ExeCom",
@@ -39,10 +41,12 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mode, setMode] = useState<LoginMode>("execom");
+  const [modeError, setModeError] = useState("");
+  const loginAttempted = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const decorRef = useRef<HTMLDivElement>(null);
 
-  const { loginWithEmail, loginWithGoogle, error, user, isLoading, initAuth } = useAuthStore();
+  const { loginWithEmail, loginWithGoogle, error, user, isLoading, logout, initAuth } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -52,11 +56,35 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      if (user.role === UserRole.facultyAdvisor) router.replace("/observatory");
-      else if (user.role === UserRole.chapterAdmin || user.email === "adhithyamohans.b24ec1205@mbcet.ac.in") router.replace("/executive");
+      const isAdmin = user.role === UserRole.chapterAdmin || user.email === ROOT_ADMIN;
+      const isFaculty = user.role === UserRole.facultyAdvisor;
+
+      if (loginAttempted.current) {
+        loginAttempted.current = false;
+        // Enforce portal rules
+        if (mode === "admin" && !isAdmin) {
+          setTimeout(() => setModeError("Admin portal is restricted to the PR Head only."), 0);
+          logout();
+          return;
+        }
+        if (mode === "faculty" && !isAdmin && !isFaculty) {
+          setTimeout(() => setModeError("Faculty portal is for Faculty Advisors only."), 0);
+          logout();
+          return;
+        }
+        if (mode === "execom" && isFaculty && !isAdmin) {
+          setTimeout(() => setModeError("Faculty Advisors must use the Faculty login portal."), 0);
+          logout();
+          return;
+        }
+      }
+
+      // Route based on role
+      if (isAdmin) router.replace("/executive");
+      else if (isFaculty) router.replace("/faculty");
       else router.replace("/");
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, mode, logout]);
 
   useEffect(() => {
     if (!cardRef.current) return;
@@ -83,15 +111,19 @@ export default function LoginPage() {
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModeError("");
+    loginAttempted.current = true;
     setSubmitting(true);
-    try { await loginWithEmail(email, password); }
+    try { await loginWithEmail(email, password, rememberMe); }
     catch { /* error in store */ }
     finally { setSubmitting(false); }
   };
 
   const handleGoogle = async () => {
+    setModeError("");
+    loginAttempted.current = true;
     setSubmitting(true);
-    try { await loginWithGoogle(); }
+    try { await loginWithGoogle(rememberMe); }
     catch { /* error in store */ }
     finally { setSubmitting(false); }
   };
@@ -240,14 +272,16 @@ export default function LoginPage() {
           <div style={{ height: 1, background: `linear-gradient(to right, ${m.color}30, transparent)`, marginBottom: 22 }} />
         </div>
 
-        {/* Error */}
-        {error && (
+        {/* Error / Mode Error */}
+        {(error || modeError) && (
           <div style={{
             background: "var(--error-light)", border: "1px solid rgba(220,38,38,0.2)",
             borderRadius: 12, padding: "12px 16px", marginBottom: 18,
             color: "var(--error)", fontSize: 13, lineHeight: 1.5,
+            display: "flex", alignItems: "flex-start", gap: 8,
           }}>
-            {error}
+            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            {modeError || error}
           </div>
         )}
 
@@ -337,7 +371,7 @@ export default function LoginPage() {
 
         {/* Footer note */}
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6 }}>
-          Access restricted to <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>@mbcet.ac.in</span> accounts · Provisioned by Chairperson
+          Access restricted to <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>@mbcet.ac.in</span> accounts
         </p>
       </div>
 
