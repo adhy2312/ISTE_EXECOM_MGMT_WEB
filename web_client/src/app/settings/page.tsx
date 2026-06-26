@@ -61,7 +61,7 @@ export default function SettingsPage() {
 
   // Evaluation state
   const [expandedMemberEval, setExpandedMemberEval] = useState<string | null>(null);
-  const [evalDraft, setEvalDraft] = useState<Record<string, number>>({});
+  const [evalDraft, setEvalDraft] = useState<Partial<EvaluationScore>>({});
   const [expandedContribs, setExpandedContribs] = useState<string | null>(null);
 
   const isAdmin = isRootOrChapterAdmin(user);
