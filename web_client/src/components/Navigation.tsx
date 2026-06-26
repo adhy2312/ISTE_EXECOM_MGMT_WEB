@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Trophy, Layers, Home, Zap, Crown, Telescope,
-  User, Settings, Bell,
+  User, Settings, Bell, CreditCard, LogOut
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
@@ -16,7 +16,7 @@ const NAVLESS_ROUTES = ["/login", "/bootstrap"];
 
 export function Navigation() {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const { unreadCount, subscribeToNotifications } = useNotificationsStore();
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +50,7 @@ export function Navigation() {
       { href: "/",           label: "Home",      icon: Home },
       { href: "/faculty",    label: "Portal",    icon: Telescope },
       { href: "/observatory",label: "Analytics", icon: Crown },
+      { href: "/id",          label: "ID Card",  icon: CreditCard },
     ];
   } else if (isAdmin) {
     links = [
@@ -59,6 +60,7 @@ export function Navigation() {
       { href: "/hub",         label: "Hub",      icon: Layers },
       { href: "/executive",   label: "Command",  icon: Crown },
       { href: "/settings",    label: "Settings", icon: Settings },
+      { href: "/id",          label: "ID Card",  icon: CreditCard },
     ];
   } else {
     links = [
@@ -68,6 +70,7 @@ export function Navigation() {
       { href: "/hub",         label: "Hub",      icon: Layers },
       { href: "/points",      label: "My XP",    icon: Zap },
       { href: "/profile",     label: "Profile",  icon: Settings },
+      { href: "/id",          label: "ID Card",  icon: CreditCard },
     ];
   }
 
@@ -128,6 +131,25 @@ export function Navigation() {
           )}
           <span className="dock-tooltip">Alerts</span>
         </Link>
+
+        {/* Global Logout */}
+        <button
+          onClick={() => {
+            if (confirm("Are you sure you want to log out?")) {
+              logout();
+            }
+          }}
+          className="dock-item"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "none", width: 42, height: 42, borderRadius: 21, cursor: "pointer",
+            color: "var(--text-secondary)", background: "transparent",
+            transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)", position: "relative",
+          }}
+        >
+          <LogOut size={22} strokeWidth={2} />
+          <span className="dock-tooltip">Log Out</span>
+        </button>
       </nav>
     </div>
   );

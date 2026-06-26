@@ -22,7 +22,7 @@ export default function DirectoryPage() {
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
       const matchesSearch = m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            m.designation.toLowerCase().includes(searchQuery.toLowerCase());
+                            (m.designation && m.designation.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesRole = roleFilter === "All" || m.role === roleFilter;
       return matchesSearch && matchesRole;
     });

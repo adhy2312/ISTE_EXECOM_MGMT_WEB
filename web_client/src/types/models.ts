@@ -73,6 +73,7 @@ export interface TaskItem {
   description: string;
   creatorId: string;
   assignedMemberId: string;
+  teamId: string;
   targetDeadline: string; // ISO string
   potentialPoints: number;
   state: TaskState;

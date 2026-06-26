@@ -80,7 +80,7 @@ function ScoreRing({ value, max, color, label, size = 76 }: {
 const SKILLS_SUGGESTIONS = ["Flutter", "React", "Next.js", "Python", "Figma", "UI/UX", "Video Editing", "Graphic Design", "Public Speaking", "Event Management", "Content Writing", "IoT", "Machine Learning"];
 
 export default function ProfilePage() {
-  const { user, firebaseUser } = useAuthStore();
+  const { user, firebaseUser, updateProfilePicture } = useAuthStore();
   const { updateMemberProfile } = useMembersStore();
   const { requests, isLoading: pointsLoading, fetchMyRequests } = usePointsStore();
   const { myEvaluation, myContributions, isLoading: evalLoading, fetchMyEvaluation, fetchMyContributions, submitContribution } = useEvaluationStore();
@@ -179,7 +179,7 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     setUploadingPhoto(true);
     try {
-      await useMembersStore.getState().uploadProfilePicture(user.id, file);
+      await updateProfilePicture(file);
       toast.success("Profile picture updated!");
     } catch {
       toast.error("Failed to upload profile picture.");

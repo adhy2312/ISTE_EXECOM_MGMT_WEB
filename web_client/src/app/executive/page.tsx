@@ -16,24 +16,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
+import { AddMemberModal } from "@/components/AddMemberModal";
+import { ROLE_OPTIONS, DESIGNATION_OPTIONS } from "@/lib/constants";
 
 type Tab = "overview" | "analytics" | "approvals" | "members" | "access" | "builder";
-
-// ── Role metadata (Light theme tailored) ──────────────────────────────────
-const ROLE_OPTIONS: { value: UserRole; label: string; color: string; bg: string }[] = [
-  { value: UserRole.chapterAdmin,   label: "Admin / Chairperson",       color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
-  { value: UserRole.execomCore,     label: "Core Team Member",   color: "#047857", bg: "rgba(4,120,87,0.1)" },
-  { value: UserRole.prMedia,        label: "PR & Media Team",    color: "#BE185D", bg: "rgba(190,24,93,0.1)" },
-  { value: UserRole.contentDoc,     label: "Content & Documentation",     color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
-  { value: UserRole.designTeam,     label: "Design Team",     color: "#C026D3", bg: "rgba(192,38,211,0.1)" },
-  { value: UserRole.eventMgmt,      label: "Event Management",     color: "#EA580C", bg: "rgba(234,88,12,0.1)" },
-  { value: UserRole.sheTeam,        label: "SHE Team",     color: "#16A34A", bg: "rgba(22,163,74,0.1)" },
-  { value: UserRole.internship,     label: "Internship Launchpad",     color: "#0284C7", bg: "rgba(2,132,199,0.1)" },
-  { value: UserRole.secretary,      label: "Secretary",     color: "#5B21B6", bg: "rgba(91,33,182,0.1)" },
-  { value: UserRole.treasurer,      label: "Treasurer",     color: "#0369A1", bg: "rgba(3,105,161,0.1)" },
-  { value: UserRole.generalMember,  label: "General Member",color: "#475569", bg: "rgba(71,85,105,0.1)" },
-  { value: UserRole.facultyAdvisor, label: "Faculty Advisor",color:"#0F766E", bg: "rgba(15,118,110,0.1)" },
-];
 
 const getRoleConfig = (role: UserRole) =>
   ROLE_OPTIONS.find((r) => r.value === role) ?? ROLE_OPTIONS[6];
@@ -416,13 +402,9 @@ export default function ExecutivePage() {
               </div>
             </div>
 
-
-
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {teams.map(team => {
-                // Find allowed users that belong to this team
                 const teamUsers = allowedUsers.filter(u => u.teamId === team.id);
-                // The actual profile from members if they have logged in
                 const teamMembers = members.filter(m => m.teamId === team.id);
 
                 return (
@@ -434,7 +416,6 @@ export default function ExecutivePage() {
                       </div>
                     </div>
 
-                    {/* Team Members List */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
                       {teamUsers.length === 0 ? (
                         <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No members in this team.</p>
@@ -450,11 +431,17 @@ export default function ExecutivePage() {
                                 <div className="mobile-col" style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: 8 }}>
                                   <span style={{ fontSize: 14, fontWeight: 700 }}>Editing: {u.fullName || u.email}</span>
                                 </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                                  <div><label style={labelSt}>Full Name</label><input value={builderEditForm.fullName ?? ""} onChange={e => setBuilderEditForm(f => ({ ...f, fullName: e.target.value }))} style={inputSt} /></div>
-                                  <div><label style={labelSt}>Designation</label><input value={builderEditForm.designation ?? ""} onChange={e => setBuilderEditForm(f => ({ ...f, designation: e.target.value }))} style={inputSt} /></div>
+                                <div>
+                                  <input value={builderEditForm.fullName ?? ""} onChange={e => setBuilderEditForm(f => ({...f, fullName: e.target.value}))} placeholder="Full Name" style={inputSt} />
+                                  <div style={{ marginTop: 8 }}>
+                                    <select value={builderEditForm.designation ?? ""} onChange={e => setBuilderEditForm(f => ({...f, designation: e.target.value}))} style={selectSt}>
+                                      {DESIGNATION_OPTIONS.map((d) => (
+                                        <option key={d} value={d}>{d}</option>
+                                      ))}
+                                    </select>
+                                  </div>
                                 </div>
-                                <div style={{ display: "flex", gap: 10 }}>
+                                <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
                                   <button onClick={async () => {
                                     if(profile) {
                                       await useMembersStore.getState().updateMemberProfile(profile.id, builderEditForm);
@@ -488,42 +475,18 @@ export default function ExecutivePage() {
                                 setEditingMemberId(profile?.id ?? u.email);
                                 setBuilderEditForm({ fullName: profile?.fullName ?? u.fullName, designation: profile?.designation ?? u.designation });
                               }} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: 6 }}><Edit3 size={16} /></button>
-                              <button onClick={() => { if(confirm("Remove from whitelist?")) removeAllowedUser(u.email); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 6 }}><XCircle size={16} /></button>
+                              <button onClick={() => { if(confirm("Remove from whitelist?")) removeAllowedUser(u.email); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 6 }}><Trash2 size={16} /></button>
                             </div>
                           );
                         })
                       )}
                     </div>
 
-                    {/* Add Member Form */}
                     {addingMemberToTeam === team.id ? (
-                      <div style={{ padding: 16, border: "1px dashed var(--brand)", borderRadius: 12, background: "var(--brand-glow)" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-                          <input value={newMemberForm.fullName} onChange={e => setNewMemberForm(f => ({...f, fullName: e.target.value}))} placeholder="Full Name" style={inputSt} />
-                          <input value={newMemberForm.email} onChange={e => setNewMemberForm(f => ({...f, email: e.target.value}))} placeholder="Email (@mbcet.ac.in)" style={inputSt} />
-                          <select value={newMemberForm.role} onChange={e => setNewMemberForm(f => ({...f, role: e.target.value as UserRole}))} style={selectSt}>
-                            {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                          </select>
-                          <input value={newMemberForm.designation} onChange={e => setNewMemberForm(f => ({...f, designation: e.target.value}))} placeholder="Designation" style={inputSt} />
-                        </div>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button onClick={async () => {
-                            if(!newMemberForm.email || !newMemberForm.fullName || !newMemberForm.designation) return;
-                            await addAllowedUser({
-                              email: newMemberForm.email.toLowerCase().trim(),
-                              role: newMemberForm.role,
-                              designation: newMemberForm.designation,
-                              fullName: newMemberForm.fullName,
-                              teamId: team.id,
-                              isActive: true,
-                              addedBy: user?.id ?? "admin"
-                            });
-                            setAddingMemberToTeam(null);
-                            setNewMemberForm({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
-                          }} style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, cursor: "pointer" }}>Add Member</button>
-                          <button onClick={() => setAddingMemberToTeam(null)} style={{ background: "transparent", color: "var(--text-secondary)", border: "none", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-                        </div>
-                      </div>
+                      <AddMemberModal 
+                        teamId={team.id}
+                        onClose={() => setAddingMemberToTeam(null)}
+                      />
                     ) : (
                       <button onClick={() => setAddingMemberToTeam(team.id)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "var(--brand)", background: "var(--brand-glow)", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>
                         <PlusCircle size={16} /> Add Member to Team
@@ -541,7 +504,6 @@ export default function ExecutivePage() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {activeTab === "access" && (
           <>
-            {/* Header */}
             <div className="fade-up mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", gap: 12 }}>
               <div>
                 <h2 className="outfit-font" style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 10 }}>
@@ -565,71 +527,10 @@ export default function ExecutivePage() {
               </button>
             </div>
 
-            {/* Add Member Form */}
             {showAddForm && (
-              <div className="glass-panel fade-up" style={{ padding: 24, marginBottom: 24, border: "2px solid var(--brand-glow)", background: "var(--bg)" }}>
-                <h3 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, marginBottom: 20, color: "var(--text-primary)" }}>Provision New Account</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div>
-                    <label style={labelSt}>Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="member@mbcet.ac.in"
-                      value={addForm.email}
-                      onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
-                      style={inputSt}
-                    />
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                    <div>
-                      <label style={labelSt}>Role</label>
-                      <select
-                        value={addForm.role}
-                        onChange={(e) => setAddForm({ ...addForm, role: e.target.value as UserRole })}
-                        style={selectSt}
-                      >
-                        {ROLE_OPTIONS.map((r) => (
-                          <option key={r.value} value={r.value}>{r.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={labelSt}>Designation</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Tech Head"
-                        value={addForm.designation}
-                        onChange={(e) => setAddForm({ ...addForm, designation: e.target.value })}
-                        style={inputSt}
-                      />
-                    </div>
-                  </div>
-                  {addError && (
-                    <div style={{ color: "#DC2626", fontSize: 14, background: "rgba(239,68,68,0.1)", borderRadius: 10, padding: "10px 14px", fontWeight: 500 }}>
-                      {addError}
-                    </div>
-                  )}
-                  <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                    <button onClick={handleAddUser} disabled={addLoading} style={{
-                      flex: 1, background: "var(--brand)", border: "none",
-                      borderRadius: 12, padding: 14, color: "white", fontSize: 14, fontWeight: 700,
-                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                      opacity: addLoading ? 0.6 : 1, boxShadow: "0 4px 12px var(--brand-glow)"
-                    }}>
-                      <Save size={16} /> {addLoading ? "Adding…" : "Add to Whitelist"}
-                    </button>
-                    <button onClick={() => setShowAddForm(false)} style={{
-                      padding: "14px 20px", background: "white", border: "1.5px solid var(--border-strong)",
-                      borderRadius: 12, color: "var(--text-secondary)", fontSize: 14, fontWeight: 700, cursor: "pointer",
-                    }}>
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <AddMemberModal onClose={() => setShowAddForm(false)} />
             )}
 
-            {/* Whitelist Table */}
             {adminLoading ? (
               <div style={{ textAlign: "center", padding: 40, color: "var(--text-secondary)" }}>Loading whitelist…</div>
             ) : allowedUsers.length === 0 ? (

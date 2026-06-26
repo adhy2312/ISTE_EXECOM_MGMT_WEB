@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, storage } from '@/lib/firebase';
-import { ExecomMember, UserRole, UserStatus } from '@/types/models';
+import { ExecomMember, UserRole, UserStatus, ROOT_ADMINS } from '@/types/models';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface AuthState {
@@ -32,11 +32,11 @@ async function getWhitelistEntry(email: string) {
   const key = email.toLowerCase().trim();
 
   // 👑 Root Admin Bypass — guarantees the owner is never locked out
-  if (key === 'adhithyamohans.b24ec1205@mbcet.ac.in') {
+  if (ROOT_ADMINS.includes(key)) {
     return {
       email: key,
       role: UserRole.chapterAdmin,
-      designation: 'PR Head',
+      designation: 'PR Head', // We could map this to a specific string based on email, but this works to allow access.
       isActive: true,
     };
   }
@@ -88,13 +88,12 @@ export const useAuthStore = create<AuthState>((set) => ({
             });
           } else {
             // Auto-create profile on first login using whitelist role
-            const newUser: ExecomMember = {
+            const newUser: any = {
               id: firebaseUser.uid,
               fullName: whitelist.fullName || firebaseUser.displayName || 'New Member',
               email: firebaseUser.email ?? '',
               branchBatch: whitelist.branchBatch || '',
               department: whitelist.department || '',
-              teamId: whitelist.teamId || undefined,
               contact: '',
               skills: [],
               areasOfExpertise: '',
@@ -104,8 +103,13 @@ export const useAuthStore = create<AuthState>((set) => ({
               activeStatus: UserStatus.active,
               corePoints: 0,
             };
+            
+            if (whitelist.teamId) {
+              newUser.teamId = whitelist.teamId;
+            }
+
             await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-            set({ user: newUser, isLoading: false });
+            set({ user: newUser as ExecomMember, isLoading: false });
           }
         } catch (e: unknown) {
           set({ error: (e as Error).message, isLoading: false });

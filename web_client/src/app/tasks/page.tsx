@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useTasksStore } from "@/store/tasks";
-import { TaskState, TaskPriority } from "@/types/models";
+import { useAuthStore } from "@/store/auth";
+import { TaskState, TaskPriority, UserRole, ROOT_ADMINS } from "@/types/models";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare, Clock, AlertCircle, PlayCircle, CheckCircle2, MoreHorizontal, ArrowRight, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -17,11 +18,19 @@ const COLUMNS = [
 
 export default function KanbanPage() {
   const { tasks, isLoading, fetchTasks, updateTaskState } = useTasksStore();
+  const { user } = useAuthStore();
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  const filteredTasks = useMemo(() => {
+    if (!user) return [];
+    const isAdmin = user.role === UserRole.chapterAdmin || ROOT_ADMINS.includes(user.email.toLowerCase().trim());
+    if (isAdmin) return tasks;
+    return tasks.filter(t => t.teamId === user.teamId || t.assignedMemberId === user.id);
+  }, [tasks, user]);
 
   const getPriorityColor = (p: TaskPriority) => {
     switch (p) {
@@ -83,7 +92,7 @@ export default function KanbanPage() {
         }}
       >
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter(t => t.state === col.id);
+          const columnTasks = filteredTasks.filter(t => t.state === col.id);
           const ColIcon = col.icon;
           
           return (
