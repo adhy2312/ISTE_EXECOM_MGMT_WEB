@@ -11,11 +11,13 @@ import {
   Crown, PlusCircle, Save, X, Edit3, Trash2,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
   CheckCircle2, XCircle, Clock, ExternalLink,
-  LogOut, AlertTriangle, RefreshCw,
+  LogOut, AlertTriangle, RefreshCw, Activity, Plus
 } from "lucide-react";
 import { toast } from "sonner";
-import { UserRole, ExecomMember, ContributionEntry } from "@/types/models";
-import { hasPermission, Permission, isRootOrChapterAdmin } from "@/utils/permissions";
+import { 
+  ExecomMember, UserRole, EvaluationScore
+} from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 
 type Tab = "builder" | "privileges" | "evaluation" | "access" | "audit";
 
@@ -38,7 +40,7 @@ const emptyWhitelistForm = { email: "", role: UserRole.generalMember, designatio
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
   const { members, teams, fetchMembers, fetchTeams, updateMemberProfile } = useMembersStore();
-  const { allowedUsers, auditLogs, isLoading: adminLoading, subscribeToAllowedUsers, fetchAuditLogs, addAllowedUser, updateAllowedUser, removeAllowedUser } = useAdminStore();
+  const { allowedUsers, auditLogs, isLoading: adminLoading, subscribeToAllowedUsers, fetchAuditLogs, updateAllowedUser, removeAllowedUser } = useAdminStore();
   const { allEvaluations, allContributions, fetchAllEvaluations, fetchMemberContributions, updateEvaluation, updateContributionStatus } = useEvaluationStore();
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,13 +51,9 @@ export default function SettingsPage() {
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ExecomMember>>({});
   const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
-  const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
 
   // Whitelist/Access state
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState(emptyWhitelistForm);
-  const [addLoading, setAddLoading] = useState(false);
-  const [addError, setAddError] = useState("");
   const [editWhitelistEmail, setEditWhitelistEmail] = useState<string | null>(null);
   const [editWhitelistForm, setEditWhitelistForm] = useState<{ role: UserRole; designation: string }>({ role: UserRole.generalMember, designation: "" });
 
@@ -133,21 +131,7 @@ export default function SettingsPage() {
     fetchMemberContributions(memberId);
   };
 
-  // ── Access whitelist handlers ──
-  const handleAddWhitelist = async () => {
-    setAddError("");
-    if (!addForm.email.endsWith("@mbcet.ac.in")) { setAddError("Email must be an @mbcet.ac.in address."); return; }
-    if (!addForm.designation.trim()) { setAddError("Please enter a designation."); return; }
-    setAddLoading(true);
-    try {
-      await addAllowedUser({ email: addForm.email.toLowerCase().trim(), role: addForm.role, designation: addForm.designation.trim(), isActive: true, addedBy: user?.id ?? "admin" });
-      setAddForm(emptyWhitelistForm);
-      setShowAddForm(false);
-      toast.success("Member provisioned!");
-    } catch (e) { setAddError((e as Error).message); }
-    finally { setAddLoading(false); }
-  };
-
+  // Access whitelist handlers omitted because they are not implemented in UI.
   const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "builder", label: "ExeCom Builder", icon: Users },
     { id: "privileges", label: "Privileges", icon: ShieldCheck },
@@ -544,7 +528,7 @@ export default function SettingsPage() {
                 </h2>
                 <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>Control who can log in. Only provisioned @mbcet.ac.in accounts may access.</p>
               </div>
-              <button onClick={() => { setShowAddForm(!showAddForm); setAddError(""); setAddForm(emptyWhitelistForm); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 14, padding: "12px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px var(--brand-glow)" }}>
+              <button onClick={() => setShowAddForm(!showAddForm)} style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 14, padding: "12px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px var(--brand-glow)" }}>
                 <PlusCircle size={15} /> Add Member
               </button>
             </div>

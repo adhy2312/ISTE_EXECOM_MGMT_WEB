@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 import { HubEvent, HubMeeting, HubVaultResource } from "@/types/hub";
+import { cleanPayload } from "@/utils/helpers";
 
 interface HubState {
   events: HubEvent[];
@@ -25,7 +26,7 @@ interface HubState {
 
 }
 
-export const useHubStore = create<HubState>((set, get) => ({
+export const useHubStore = create<HubState>((set) => ({
   events: [],
   meetings: [],
   vaultResources: [],
@@ -47,10 +48,8 @@ export const useHubStore = create<HubState>((set, get) => ({
   
   addEvent: async (evt) => {
     try {
-      const docRef = await addDoc(collection(db, "events"), {
-        ...evt,
-        createdAt: Date.now()
-      });
+      const payload = cleanPayload({ ...evt, createdAt: new Date().toISOString() });
+      const docRef = await addDoc(collection(db, "events"), payload);
       const newEvt = { id: docRef.id, ...evt, createdAt: Date.now() } as HubEvent;
       set((state) => ({ events: [newEvt, ...state.events] }));
     } catch (error) {
@@ -82,10 +81,8 @@ export const useHubStore = create<HubState>((set, get) => ({
   
   addMeeting: async (meeting) => {
     try {
-      const docRef = await addDoc(collection(db, "meetings"), {
-        ...meeting,
-        createdAt: Date.now()
-      });
+      const payload = cleanPayload({ ...meeting, createdAt: new Date().toISOString() });
+      const docRef = await addDoc(collection(db, "meetings"), payload);
       const newM = { id: docRef.id, ...meeting, createdAt: Date.now() } as HubMeeting;
       set((state) => ({ meetings: [newM, ...state.meetings] }));
     } catch (error) {
@@ -117,10 +114,8 @@ export const useHubStore = create<HubState>((set, get) => ({
   
   addVaultResource: async (resource) => {
     try {
-      const docRef = await addDoc(collection(db, "vault_resources"), {
-        ...resource,
-        createdAt: Date.now()
-      });
+      const payload = cleanPayload({ ...resource, createdAt: new Date().toISOString() });
+      const docRef = await addDoc(collection(db, "vault_resources"), payload);
       const newV = { id: docRef.id, ...resource, createdAt: Date.now() } as HubVaultResource;
       set((state) => ({ vaultResources: [newV, ...state.vaultResources] }));
     } catch (error) {

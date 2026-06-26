@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { collection, getDocs, doc, updateDoc, addDoc, query, orderBy, where, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { cleanPayload } from '@/utils/helpers';
 import { EnergyPointRequest, EnergyPointStatus } from '@/types/models';
 import { set as idbSet, get as idbGet, del as idbDel } from 'idb-keyval';
 
@@ -27,11 +28,11 @@ export const usePointsStore = create<PointsStore>((set) => ({
 
   submitRequest: async (data) => {
     set({ isLoading: true, error: null });
-    const payload = {
+    const payload = cleanPayload({
       ...data,
       status: EnergyPointStatus.pending,
       submittedAt: new Date().toISOString(),
-    };
+    });
 
     if (!navigator.onLine) {
       // Offline mode: queue in IndexedDB
@@ -83,12 +84,13 @@ export const usePointsStore = create<PointsStore>((set) => ({
     set({ isLoading: true });
     try {
       // 1. Update request status
-      await updateDoc(doc(db, 'energyPointRequests', id), {
+      const updateData = cleanPayload({
         status: EnergyPointStatus.approved,
         awardedPoints,
         chairpersonNote: note,
         reviewedAt: new Date().toISOString(),
       });
+      await updateDoc(doc(db, 'energyPointRequests', id), updateData);
       // 2. Increment member's core points
       const memberRef = doc(db, 'users', memberId);
       const memberSnap = await getDoc(memberRef);
@@ -97,13 +99,13 @@ export const usePointsStore = create<PointsStore>((set) => ({
         await updateDoc(memberRef, { corePoints: currentPoints + awardedPoints });
       }
       // 3. Log to audit_logs
-      await addDoc(collection(db, 'audit_logs'), {
+      await addDoc(collection(db, 'audit_logs'), cleanPayload({
         adminId,
         action: 'APPROVE_POINTS',
         targetId: id,
         awardedPoints,
         timestamp: new Date().toISOString()
-      });
+      }));
       // 4. Refresh local state
       set(state => ({
         isLoading: false,
@@ -120,18 +122,19 @@ export const usePointsStore = create<PointsStore>((set) => ({
   rejectRequest: async (id, note, adminId) => {
     set({ isLoading: true });
     try {
-      await updateDoc(doc(db, 'energyPointRequests', id), {
+      const updateData = cleanPayload({
         status: EnergyPointStatus.rejected,
         chairpersonNote: note,
         reviewedAt: new Date().toISOString(),
       });
+      await updateDoc(doc(db, 'energyPointRequests', id), updateData);
       // Log to audit_logs
-      await addDoc(collection(db, 'audit_logs'), {
+      await addDoc(collection(db, 'audit_logs'), cleanPayload({
         adminId,
         action: 'REJECT_POINTS',
         targetId: id,
         timestamp: new Date().toISOString()
-      });
+      }));
       set(state => ({
         isLoading: false,
         requests: state.requests.map(r =>

@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useAuthStore } from "@/store/auth";
@@ -8,7 +7,7 @@ import { useMembersStore } from "@/store/members";
 import { UserRole, EnergyPointStatus } from "@/types/models";
 import {
   Telescope, Users, Zap, Award, Activity, TrendingUp, Download,
-  BarChart2, DollarSign,
+  BarChart2, DollarSign, Loader2
 } from "lucide-react";
 import { usePointsStore } from "@/store/points";
 import jsPDF from "jspdf";
@@ -16,6 +15,7 @@ import autoTable from "jspdf-autotable";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart as RPieChart, Pie, Cell, Legend,
+} from "recharts";
 import { isRootOrChapterAdmin } from "@/utils/permissions";
 import { useFinanceStore } from "@/store/finance";
 import { FinanceCategory } from "@/types/models";
@@ -45,9 +45,10 @@ export default function ObservatoryPage() {
   const [showFinanceForm, setShowFinanceForm] = useState(false);
   const [financeForm, setFinanceForm] = useState({ name: "", allocated: 0, spent: 0, category: "Events" as FinanceCategory });
 
+  const isChairperson = isRootOrChapterAdmin(user);
+
   useEffect(() => {
     if (!authLoading && user) {
-      const isChairperson = isRootOrChapterAdmin(user);
       const isFaculty = user.role === UserRole.facultyAdvisor;
       if (!isChairperson && !isFaculty) {
         router.replace("/");
@@ -57,7 +58,19 @@ export default function ObservatoryPage() {
         fetchFinance();
       }
     }
-  }, [user, authLoading, router, fetchMembers, fetchAllPending, fetchFinance]);
+  }, [user, authLoading, router, fetchMembers, fetchAllPending, fetchFinance, isChairperson]);
+
+  const BUDGET_DATA = financeRecords;
+  
+  const BUDGET_CATEGORIES = React.useMemo(() => {
+    const cats: Record<string, number> = {};
+    financeRecords.forEach(r => {
+      cats[r.category] = (cats[r.category] || 0) + r.allocated;
+    });
+    return Object.entries(cats).map(([name, value]) => ({
+      name, value, color: FINANCE_COLORS[name] || FINANCE_COLORS.Other
+    }));
+  }, [financeRecords]);
 
   useEffect(() => {
     if (!membersLoading && !pointsLoading && containerRef.current) {
@@ -89,6 +102,84 @@ export default function ObservatoryPage() {
     .slice(0, 8)
     .map(m => ({ name: m.fullName.split(" ")[0], xp: m.corePoints }));
 
+  // Generate PDF Executive Report
+  const downloadExecutiveReport = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(22);
+    doc.setTextColor(124, 58, 237); // Brand color
+    doc.text("ISTE ExeCom - Observatory Report", 14, 22);
+    
+    // Meta
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+    
+    // Overview Stats
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Overview Statistics", 14, 45);
+    
+    autoTable(doc, {
+      startY: 50,
+      head: [["Metric", "Value"]],
+      body: [
+        ["Total Active Members", activeMembersCount],
+        ["Total Experience Points (XP)", totalXP],
+        ["Pending Energy Point Requests", pendingCount],
+        ["Approved Energy Point Requests", approvedCount]
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [124, 58, 237] }
+    });
+
+    const currentY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+
+    // Top Members
+    doc.setFontSize(14);
+    doc.text("Top 5 Executives by XP", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 5,
+      head: [["Rank", "Name", "Designation", "XP"]],
+      body: topMembers.map((m, i) => [i + 1, m.fullName, m.designation, m.corePoints]),
+      theme: "striped",
+      headStyles: { fillColor: [5, 150, 105] }
+    });
+
+    doc.save("ISTE_Observatory_Report.pdf");
+  };
+
+  // Export Finance
+  const exportFinanceCSV = () => {
+    if (financeRecords.length === 0) return;
+    const headers = ["Name", "Category", "Allocated", "Spent", "Remaining", "Date"];
+    const rows = financeRecords.map(r => [r.name, r.category, r.allocated, r.spent, r.allocated - r.spent, new Date(r.createdAt).toLocaleDateString()]);
+    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "ISTE_Finance_Export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportFinancePDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Chapter Finance Report", 14, 20);
+    autoTable(doc, {
+      startY: 30,
+      head: [["Name", "Category", "Allocated", "Spent", "Remaining"]],
+      body: financeRecords.map(r => [r.name, r.category, r.allocated, r.spent, r.allocated - r.spent]),
+      theme: "grid",
+    });
+    doc.save("ISTE_Finance_Report.pdf");
+  };
+
   // Points by category
   const categoryMap: Record<string, number> = {};
   requests.filter(r => r.status === EnergyPointStatus.approved).forEach(r => {
@@ -96,29 +187,6 @@ export default function ObservatoryPage() {
   });
   const categoryData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
   const PIE_COLORS = ["#7C3AED", "#2563EB", "#BE185D", "#059669", "#D97706", "#0F766E", "#4338CA", "#DC2626"];
-
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("ISTE SC MBCET - Official Chapter Report", 14, 20);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
-    doc.text(`Total Active Members: ${activeMembersCount}`, 14, 34);
-    doc.text(`Total Chapter Energy (XP): ${totalXP}`, 14, 40);
-    doc.text(`Total Energy Requests Processed: ${pendingCount + approvedCount}`, 14, 46);
-    autoTable(doc, {
-      startY: 54,
-      head: [["Rank", "Name", "Designation", "Total XP"]],
-      body: [...members].sort((a, b) => b.corePoints - a.corePoints).map((m, i) => [
-        `#${i + 1}`, m.fullName, m.designation, m.corePoints.toString()
-      ]),
-      theme: "grid",
-      headStyles: { fillColor: [55, 48, 163] },
-    });
-    doc.save("ISTE_Chapter_Report.pdf");
-  };
 
   const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Telescope },
@@ -146,7 +214,7 @@ export default function ObservatoryPage() {
             <p style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 600 }}>High-level Chapter Operations View</p>
           </div>
         </div>
-        <button onClick={generatePDF} style={{
+        <button onClick={downloadExecutiveReport} style={{
           display: "flex", alignItems: "center", gap: 6,
           background: "var(--bg-elevated)", color: "var(--text-primary)",
           border: "1.5px solid var(--border-strong)", borderRadius: 12, padding: "10px 16px",
@@ -390,22 +458,34 @@ export default function ObservatoryPage() {
             {/* Finance Injection Panel */}
             {isChairperson && (
               <div className="glass-panel fade-up" style={{ padding: 24, marginTop: 24 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
                   <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
                     Financial Data Injections
                   </h2>
-                  <button onClick={() => setShowFinanceForm(!showFinanceForm)} style={{ display: "flex", alignItems: "center", gap: 6, background: showFinanceForm ? "var(--error-light)" : "var(--brand)", color: showFinanceForm ? "var(--error)" : "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                    {showFinanceForm ? "Cancel" : "+ Inject Data"}
-                  </button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={exportFinancePDF} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--bg-elevated)", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      <Download size={14} /> Export PDF
+                    </button>
+                    <button onClick={exportFinanceCSV} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--bg-elevated)", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      <Download size={14} /> Export CSV
+                    </button>
+                    <button onClick={() => setShowFinanceForm(!showFinanceForm)} style={{ display: "flex", alignItems: "center", gap: 6, background: showFinanceForm ? "var(--error-light)" : "var(--brand)", color: showFinanceForm ? "var(--error)" : "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      {showFinanceForm ? "Cancel" : "+ Inject Data"}
+                    </button>
+                  </div>
                 </div>
 
                 {showFinanceForm && (
                   <form onSubmit={async (e) => {
                     e.preventDefault();
-                    if (!user) return;
-                    await addRecord({ ...financeForm, createdBy: user.id });
-                    setFinanceForm({ name: "", allocated: 0, spent: 0, category: "Events" });
+                    if (!financeForm.name || financeForm.allocated <= 0) return;
+                    await addRecord({
+                      ...financeForm,
+                      date: new Date().toISOString().split('T')[0],
+                      createdBy: user?.id || ""
+                    });
                     setShowFinanceForm(false);
+                    setFinanceForm({ name: "", allocated: 0, spent: 0, category: "Events" as FinanceCategory });
                   }} style={{ display: "flex", flexWrap: "wrap", gap: 14, background: "var(--bg-muted)", padding: 16, borderRadius: 16, marginBottom: 24, border: "1px solid var(--border)" }}>
                     <input type="text" placeholder="Entry Name (e.g. Tech Fest)" value={financeForm.name} onChange={e => setFinanceForm(f => ({ ...f, name: e.target.value }))} style={{ flex: "1 1 200px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required />
                     <select value={financeForm.category} onChange={e => setFinanceForm(f => ({ ...f, category: e.target.value as FinanceCategory }))} style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required>

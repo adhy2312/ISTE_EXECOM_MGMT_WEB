@@ -2,11 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
-import { ChevronLeft, Plus, CheckCircle2, Clock, Users, FileText, ChevronRight, X, Trash2, ExternalLink } from "lucide-react";
+import { ChevronLeft, Plus, CheckCircle2, Clock, Users, FileText, X, Trash2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHubStore } from "@/store/hub";
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 export default function MeetingsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,10 +14,21 @@ export default function MeetingsPage() {
   const { meetings, fetchMeetings, addMeeting, deleteMeeting } = useHubStore();
   const [isCreating, setIsCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [newMeeting, setNewMeeting] = useState({
+  const [newMeeting, setNewMeeting] = useState<{
+    title: string;
+    date: string;
+    status: "upcoming" | "past";
+    actionItems: number;
+    completedItems: number;
+    attendance: number;
+    total: number;
+    meetLink: string;
+    agendaUrl: string;
+    minutesUrl: string;
+  }>({
     title: "",
     date: "",
-    status: "upcoming" as const,
+    status: "upcoming",
     actionItems: 0,
     completedItems: 0,
     attendance: 0,
@@ -51,10 +61,24 @@ export default function MeetingsPage() {
       await addMeeting(newMeeting);
       setIsCreating(false);
       setNewMeeting({ title: "", date: "", status: "upcoming", actionItems: 0, completedItems: 0, attendance: 0, total: 0, meetLink: "", agendaUrl: "", minutesUrl: "" });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const generateGoogleCalendarLink = (meeting: import("@/types/hub").HubMeeting) => {
+    try {
+      const title = encodeURIComponent(meeting.title || "Meeting");
+      const details = encodeURIComponent(`Join Link: ${meeting.meetLink || "N/A"}\nAgenda: ${meeting.agendaUrl || "N/A"}`);
+      const startDate = new Date(meeting.date);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+      const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g,"");
+      const dates = `${formatDate(startDate)}/${formatDate(endDate)}`;
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dates}`;
+    } catch {
+      return "#";
     }
   };
 
@@ -186,6 +210,18 @@ export default function MeetingsPage() {
                       View Minutes <FileText size={14} />
                     </button>
                   )}
+                  {m.status === 'upcoming' && (
+                    <button 
+                      onClick={() => window.open(generateGoogleCalendarLink(m), "_blank")}
+                      style={{ 
+                        background: "rgba(37,99,235,0.1)", border: "1px solid #2563EB", 
+                        borderRadius: 12, padding: "8px 16px", color: "#2563EB", 
+                        fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                      }}
+                    >
+                      Calendar <ExternalLink size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -236,7 +272,7 @@ export default function MeetingsPage() {
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Status</label>
-                  <select required value={newMeeting.status} onChange={e => setNewMeeting({...newMeeting, status: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                  <select required value={newMeeting.status} onChange={e => setNewMeeting({...newMeeting, status: e.target.value as "upcoming" | "past"})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
                     <option value="upcoming">Upcoming</option>
                     <option value="past">Past</option>
                   </select>

@@ -4,6 +4,7 @@ import {
   collection, addDoc, getDocs, query, orderBy,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { cleanPayload } from '@/utils/helpers';
 import { EvaluationScore, ContributionEntry, ContributionStatus } from '@/types/models';
 
 interface EvaluationStore {
@@ -63,12 +64,12 @@ export const useEvaluationStore = create<EvaluationStore>((set, get) => ({
   submitContribution: async (memberId, data) => {
     set({ isLoading: true, error: null });
     try {
-      const entry = {
+      const entry = cleanPayload({
         ...data,
         memberId,
         submittedAt: new Date().toISOString(),
         status: 'pending' as ContributionStatus,
-      };
+      });
       await addDoc(collection(db, 'contributionLog', memberId, 'entries'), entry);
       await get().fetchMyContributions(memberId);
     } catch (e: unknown) {

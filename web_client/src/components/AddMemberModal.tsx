@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UserRole } from "@/types/models";
 import { ROLE_OPTIONS, DESIGNATION_OPTIONS } from "@/lib/constants";
-import { useMembersStore } from "@/store/members";
+import { useAdminStore } from "@/store/admin";
 import { useAuthStore } from "@/store/auth";
 import { X } from "lucide-react";
 
@@ -14,7 +14,7 @@ interface AddMemberModalProps {
 
 export function AddMemberModal({ onClose, teamId }: AddMemberModalProps) {
   const { user } = useAuthStore();
-  const { addAllowedUser } = useMembersStore();
+  const { addAllowedUser } = useAdminStore();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     fullName: "",

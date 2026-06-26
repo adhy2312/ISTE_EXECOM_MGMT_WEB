@@ -13,12 +13,18 @@ export default function EventsOpsPage() {
   
   const { events, fetchEvents, addEvent, deleteEvent } = useHubStore();
   const [isCreating, setIsCreating] = useState(false);
-  const [newEvent, setNewEvent] = useState({
+  const [newEvent, setNewEvent] = useState<{
+    title: string;
+    date: string;
+    location: string;
+    attendees: number;
+    status: "planning" | "upcoming" | "past";
+  }>({
     title: "",
     date: "",
     location: "",
     attendees: 0,
-    status: "planning" as const
+    status: "planning"
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,7 +43,7 @@ export default function EventsOpsPage() {
     }
   }, [events]);
 
-  const toggleChecklist = (eventId: string, checkId: string) => {
+  const toggleChecklist = () => {
     // Note: Since checklists aren't in the DB schema for now we just handle local or ignore.
     // Full implementation would update Firestore. For now, events don't have checklists on creation.
   };
@@ -58,10 +64,24 @@ export default function EventsOpsPage() {
       });
       setIsCreating(false);
       setNewEvent({ title: "", date: "", location: "", attendees: 0, status: "planning" });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const generateGoogleCalendarLink = (evt: import("@/types/hub").HubEvent) => {
+    try {
+      const title = encodeURIComponent(evt.title || "ISTE Event");
+      const details = encodeURIComponent(`Location: ${evt.location || "N/A"}\nAttendees: ${evt.attendees}`);
+      const startDate = new Date(evt.date);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000 * 2); // 2 hours duration
+      const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g,"");
+      const dates = `${formatDate(startDate)}/${formatDate(endDate)}`;
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(evt.location)}&dates=${dates}`;
+    } catch {
+      return "#";
     }
   };
 
@@ -147,6 +167,11 @@ export default function EventsOpsPage() {
                           <DropdownMenu.Item className="dropdown-item" onSelect={() => deleteEvent(evt.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "var(--error)", fontSize: 13, fontWeight: 600 }}>
                             <Trash2 size={14} /> Delete Event
                           </DropdownMenu.Item>
+                          {evt.status !== 'past' && (
+                            <DropdownMenu.Item className="dropdown-item" onSelect={() => window.open(generateGoogleCalendarLink(evt), "_blank")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "#2563EB", fontSize: 13, fontWeight: 600 }}>
+                              <Calendar size={14} /> Add to Calendar
+                            </DropdownMenu.Item>
+                          )}
                         </DropdownMenu.Content>
                       </DropdownMenu.Portal>
                     </DropdownMenu.Root>
@@ -193,7 +218,7 @@ export default function EventsOpsPage() {
                       {evt.checklists.map(check => (
                         <button 
                           key={check.id}
-                          onClick={() => toggleChecklist(evt.id, check.id)}
+                          onClick={() => toggleChecklist()}
                           style={{ 
                             display: "flex", alignItems: "center", gap: 12, padding: "12px", 
                             background: check.done ? "rgba(5, 150, 105, 0.05)" : "var(--bg-elevated)", 
@@ -239,7 +264,7 @@ export default function EventsOpsPage() {
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Status</label>
-                  <select required value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                  <select required value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value as "planning" | "upcoming" | "past"})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
                     <option value="planning">Planning</option>
                     <option value="upcoming">Upcoming</option>
                     <option value="past">Past</option>
