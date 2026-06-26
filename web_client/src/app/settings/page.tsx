@@ -622,8 +622,8 @@ export default function SettingsPage() {
                         {log.awardedPoints != null && <span style={{ color: "var(--success)", marginLeft: 8 }}>+{log.awardedPoints} XP</span>}
                       </div>
                       <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Admin: {log.adminId.slice(0, 8)}…</span>
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Target: {log.targetId.slice(0, 8)}…</span>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Admin: {(log.adminId || "System").slice(0, 8)}…</span>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Target: {(log.targetId || "Unknown").slice(0, 8)}…</span>
                         <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(log.timestamp).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
                     </div>

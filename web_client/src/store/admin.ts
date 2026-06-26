@@ -48,12 +48,12 @@ export const useAdminStore = create<AdminState>((set) => ({
   subscribeToAllowedUsers: () => {
     const q = collection(db, 'allowedUsers');
     const unsub = onSnapshot(q, (snap) => {
-      const users = snap.docs.map((d) => ({ ...d.data() } as AllowedUser));
+      const users = snap.docs.map((d) => ({ email: d.id, ...d.data() } as AllowedUser));
       // Sort: admins first, then alphabetically
       users.sort((a, b) => {
-        if (a.role === UserRole.chapterAdmin) return -1;
-        if (b.role === UserRole.chapterAdmin) return 1;
-        return a.email.localeCompare(b.email);
+        if (a.role === UserRole.chapterAdmin && b.role !== UserRole.chapterAdmin) return -1;
+        if (b.role === UserRole.chapterAdmin && a.role !== UserRole.chapterAdmin) return 1;
+        return (a.email || "").localeCompare(b.email || "");
       });
       set({ allowedUsers: users });
     }, (err) => {
@@ -66,11 +66,11 @@ export const useAdminStore = create<AdminState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const snap = await getDocs(collection(db, 'allowedUsers'));
-      const users = snap.docs.map((d) => ({ ...d.data() } as AllowedUser));
+      const users = snap.docs.map((d) => ({ email: d.id, ...d.data() } as AllowedUser));
       users.sort((a, b) => {
-        if (a.role === UserRole.chapterAdmin) return -1;
-        if (b.role === UserRole.chapterAdmin) return 1;
-        return a.email.localeCompare(b.email);
+        if (a.role === UserRole.chapterAdmin && b.role !== UserRole.chapterAdmin) return -1;
+        if (b.role === UserRole.chapterAdmin && a.role !== UserRole.chapterAdmin) return 1;
+        return (a.email || "").localeCompare(b.email || "");
       });
       set({ allowedUsers: users, isLoading: false });
     } catch (e: unknown) {
