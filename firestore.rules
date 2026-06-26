@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    function isRootAdmin() {
+      return request.auth.token.email in [
+        "adhithyamohans.b24ec1205@mbcet.ac.in",
+        "govindwarrier.b25ec1232@mbcet.ac.in",
+        "snithshibu.b23ec1156@mbcet.ac.in",
+        "melvin.jacob@mbcet.ac.in"
+      ];
+    }
+    
+    function isChapterAdmin() {
+      return isRootAdmin() || (
+        exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)).data.role == 'chapterAdmin'
+      );
+    }
+
+    // --- Access Rules ---
+
+    // 1. allowedUsers (Whitelist)
+    match /allowedUsers/{emailId} {
+      allow read: if isAuth();
+      allow write: if isRootAdmin() || isChapterAdmin();
+    }
+
+    // 2. users (Execom Members)
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow update: if isAuth() && (request.auth.uid == userId || isChapterAdmin());
+      allow create, delete: if isChapterAdmin();
+    }
+
+    // 3. evaluations
+    match /evaluations/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isChapterAdmin());
+      allow write: if isChapterAdmin();
+    }
+
+    // 4. contributionLog
+    match /contributionLog/{userId}/entries/{entryId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isChapterAdmin());
+      allow write: if isAuth() && (request.auth.uid == userId || isChapterAdmin());
+    }
+
+    // 5. finances
+    match /finances/{financeId} {
+      allow read: if isAuth();
+      allow write: if isChapterAdmin();
+    }
+
+    // 6. energyPointRequests
+    match /energyPointRequests/{requestId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.memberId == request.auth.uid;
+      allow update: if isChapterAdmin() || (request.auth.uid == resource.data.memberId && resource.data.status == 'pending');
+      allow delete: if isChapterAdmin() || (request.auth.uid == resource.data.memberId && resource.data.status == 'pending');
+    }
+
+    // 7. hub modules (events, meetings, vault_resources)
+    match /events/{eventId} {
+      allow read: if isAuth();
+      allow write: if isChapterAdmin();
+    }
+    match /meetings/{meetingId} {
+      allow read: if isAuth();
+      allow write: if isChapterAdmin();
+    }
+    match /vault_resources/{resourceId} {
+      allow read: if isAuth();
+      allow write: if isChapterAdmin();
+    }
+
+    // 8. audit_logs
+    match /audit_logs/{logId} {
+      allow read: if isChapterAdmin();
+      allow create: if isAuth(); // Anyone can trigger an audit log write from the client
+      allow update, delete: if false; // Logs are immutable
+    }
+
+    // 9. notifications
+    match /notifications/{notifId} {
+      allow read: if isAuth();
+      allow create: if isChapterAdmin();
+      allow update: if isAuth(); // For marking as read
+      allow delete: if isChapterAdmin();
+    }
+
+    // 10. teams
+    match /teams/{teamId} {
+      allow read: if isAuth();
+      allow write: if isChapterAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

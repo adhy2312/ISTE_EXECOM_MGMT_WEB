@@ -177,3 +177,19 @@ export interface ContributionEntry {
   status: ContributionStatus;
   adminNote?: string;
 }
+
+// ─── Finance ───────────────────────────────────────────────────────────────
+
+export type FinanceCategory = 'Events' | 'Education' | 'PR' | 'Tech' | 'Operations' | 'Other';
+
+export interface FinanceRecord {
+  id: string;
+  name: string;
+  allocated: number;
+  spent: number;
+  category: FinanceCategory;
+  date: string; // ISO string
+  notes?: string;
+  createdBy: string; // admin uid
+  createdAt: string; // ISO string
+}

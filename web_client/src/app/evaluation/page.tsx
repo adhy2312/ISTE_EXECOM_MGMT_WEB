@@ -169,7 +169,7 @@ export default function EvaluationPage() {
         <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, marginBottom: 20, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
           <Star size={18} color="var(--brand)" /> Score Breakdown
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, justifyItems: "center" }}>
+        <div className="responsive-grid-4" style={{ gap: 8, justifyItems: "center" }}>
           {SCORE_COMPONENTS.map(c => (
             <ScoreRing
               key={c.key}

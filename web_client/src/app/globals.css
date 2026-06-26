@@ -264,6 +264,80 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
   font-style: italic;
 }
 
+/* ── Status & Tags ──────────────────────────────────────────────────────────── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.status-pending  { background: var(--warning-light); color: var(--warning); }
+.status-approved { background: var(--success-light); color: var(--success); }
+.status-rejected { background: var(--error-light);   color: var(--error);   }
+
+/* ── Mobile Layout Fixes ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Fix dock nav overflow */
+  .dock-nav {
+    max-width: 90vw;
+    overflow-x: auto;
+    padding: 10px;
+    justify-content: flex-start;
+  }
+  
+  .dock-item {
+    padding: 8px 12px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  
+  /* Fix grid breaks on observatory / hub */
+  .responsive-grid-2,
+  .responsive-grid-3,
+  .responsive-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Prevent text overflows on glass panels */
+  .glass-panel {
+    padding: 16px !important;
+    border-radius: 16px;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .mobile-wrap {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  
+  .mobile-col {
+    flex-direction: column !important;
+  }
+  
+  /* Shrink enormous fonts */
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  
+  /* Table overflows */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  /* Fix input paddings */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS auto-zoom */
+  }
+}
+
 /* ── Status badges ──────────────────────────────────────────────────────────── */
 .badge-success { background: var(--success-light); color: var(--success); }
 .badge-warning { background: var(--warning-light); color: var(--warning); }

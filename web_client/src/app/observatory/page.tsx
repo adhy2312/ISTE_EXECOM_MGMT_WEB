@@ -16,32 +16,34 @@ import autoTable from "jspdf-autotable";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart as RPieChart, Pie, Cell, Legend,
-} from "recharts";
 import { isRootOrChapterAdmin } from "@/utils/permissions";
+import { useFinanceStore } from "@/store/finance";
+import { FinanceCategory } from "@/types/models";
 
 type Tab = "overview" | "analytics" | "finance";
 
-// Mock finance data
-const BUDGET_DATA = [
-  { name: "Tech Fest", allocated: 15000, spent: 11200, category: "Events" },
-  { name: "Workshop Series", allocated: 8000, spent: 7500, category: "Education" },
-  { name: "Branding", allocated: 5000, spent: 3200, category: "PR" },
-  { name: "Infrastructure", allocated: 10000, spent: 6800, category: "Tech" },
-];
-const BUDGET_CATEGORIES = [
-  { name: "Events", value: 38, color: "#7C3AED" },
-  { name: "Education", value: 21, color: "#2563EB" },
-  { name: "PR", value: 16, color: "#BE185D" },
-  { name: "Tech", value: 25, color: "#059669" },
-];
+// Colors for pie chart
+const FINANCE_COLORS: Record<FinanceCategory | string, string> = {
+  Events: "#7C3AED",
+  Education: "#2563EB",
+  PR: "#BE185D",
+  Tech: "#059669",
+  Operations: "#F59E0B",
+  Other: "#6B7280"
+};
 
 export default function ObservatoryPage() {
   const { user, isLoading: authLoading } = useAuthStore();
   const { members, fetchMembers, isLoading: membersLoading } = useMembersStore();
   const { requests, fetchAllPending, isLoading: pointsLoading } = usePointsStore();
+  const { records: financeRecords, fetchRecords: fetchFinance, addRecord, deleteRecord } = useFinanceStore();
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  
+  // Finance Form State
+  const [showFinanceForm, setShowFinanceForm] = useState(false);
+  const [financeForm, setFinanceForm] = useState({ name: "", allocated: 0, spent: 0, category: "Events" as FinanceCategory });
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -52,9 +54,10 @@ export default function ObservatoryPage() {
       } else {
         fetchMembers();
         fetchAllPending();
+        fetchFinance();
       }
     }
-  }, [user, authLoading, router, fetchMembers, fetchAllPending]);
+  }, [user, authLoading, router, fetchMembers, fetchAllPending, fetchFinance]);
 
   useEffect(() => {
     if (!membersLoading && !pointsLoading && containerRef.current) {
@@ -374,15 +377,88 @@ export default function ObservatoryPage() {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={BUDGET_DATA} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 600, fill: "var(--text-secondary)" }} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 600, fill: "var(--text-secondary)" }} width={80} />
                     <YAxis tick={{ fontSize: 10, fill: "var(--text-muted)" }} />
                     <Tooltip contentStyle={{ background: "rgba(255,255,255,0.95)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} formatter={(v) => [`₹${Number(v).toLocaleString()}`, ""]} />
                     <Bar dataKey="allocated" fill="#7C3AED" radius={[4, 4, 0, 0]} name="Allocated" opacity={0.5} />
-                    <Bar dataKey="spent" fill="#7C3AED" radius={[4, 4, 0, 0]} name="Spent" />
+                    <Bar dataKey="spent" fill="#EA580C" radius={[4, 4, 0, 0]} name="Spent" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
+
+            {/* Finance Injection Panel */}
+            {isChairperson && (
+              <div className="glass-panel fade-up" style={{ padding: 24, marginTop: 24 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
+                    Financial Data Injections
+                  </h2>
+                  <button onClick={() => setShowFinanceForm(!showFinanceForm)} style={{ display: "flex", alignItems: "center", gap: 6, background: showFinanceForm ? "var(--error-light)" : "var(--brand)", color: showFinanceForm ? "var(--error)" : "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    {showFinanceForm ? "Cancel" : "+ Inject Data"}
+                  </button>
+                </div>
+
+                {showFinanceForm && (
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!user) return;
+                    await addRecord({ ...financeForm, createdBy: user.id });
+                    setFinanceForm({ name: "", allocated: 0, spent: 0, category: "Events" });
+                    setShowFinanceForm(false);
+                  }} style={{ display: "flex", flexWrap: "wrap", gap: 14, background: "var(--bg-muted)", padding: 16, borderRadius: 16, marginBottom: 24, border: "1px solid var(--border)" }}>
+                    <input type="text" placeholder="Entry Name (e.g. Tech Fest)" value={financeForm.name} onChange={e => setFinanceForm(f => ({ ...f, name: e.target.value }))} style={{ flex: "1 1 200px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required />
+                    <select value={financeForm.category} onChange={e => setFinanceForm(f => ({ ...f, category: e.target.value as FinanceCategory }))} style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required>
+                      {Object.keys(FINANCE_COLORS).map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input type="number" placeholder="Allocated (₹)" value={financeForm.allocated || ""} onChange={e => setFinanceForm(f => ({ ...f, allocated: Number(e.target.value) }))} style={{ flex: "1 1 100px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required />
+                    <input type="number" placeholder="Spent (₹)" value={financeForm.spent || ""} onChange={e => setFinanceForm(f => ({ ...f, spent: Number(e.target.value) }))} style={{ flex: "1 1 100px", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", outline: "none", fontSize: 13, background: "white" }} required />
+                    <button type="submit" style={{ background: "#10B981", color: "white", border: "none", borderRadius: 10, padding: "10px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save</button>
+                  </form>
+                )}
+
+                {financeRecords.length === 0 ? (
+                  <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No financial records found.</p>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--border-strong)", textAlign: "left", color: "var(--text-secondary)" }}>
+                          <th style={{ padding: "12px 8px" }}>Name</th>
+                          <th style={{ padding: "12px 8px" }}>Category</th>
+                          <th style={{ padding: "12px 8px", textAlign: "right" }}>Allocated</th>
+                          <th style={{ padding: "12px 8px", textAlign: "right" }}>Spent</th>
+                          <th style={{ padding: "12px 8px", textAlign: "right" }}>Remaining</th>
+                          <th style={{ padding: "12px 8px", textAlign: "center" }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financeRecords.map(r => (
+                          <tr key={r.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                            <td style={{ padding: "12px 8px", fontWeight: 600 }}>{r.name}</td>
+                            <td style={{ padding: "12px 8px" }}>
+                              <span style={{ background: `${FINANCE_COLORS[r.category]}15`, color: FINANCE_COLORS[r.category], padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                                {r.category}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 8px", textAlign: "right", fontWeight: 700 }}>₹{r.allocated.toLocaleString()}</td>
+                            <td style={{ padding: "12px 8px", textAlign: "right", color: "var(--warning)", fontWeight: 700 }}>₹{r.spent.toLocaleString()}</td>
+                            <td style={{ padding: "12px 8px", textAlign: "right", color: (r.allocated - r.spent) >= 0 ? "var(--success)" : "var(--error)", fontWeight: 700 }}>
+                              ₹{(r.allocated - r.spent).toLocaleString()}
+                            </td>
+                            <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                              <button onClick={() => deleteRecord(r.id)} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 4 }}>
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Event-level Breakdown */}
             <div className="glass-panel fade-up" style={{ padding: 24 }}>
