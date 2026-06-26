@@ -4,10 +4,22 @@ export enum UserRole {
   treasurer = 'treasurer',
   techHead = 'techHead',
   prMedia = 'prMedia',
+  contentDoc = 'contentDoc',
+  designTeam = 'designTeam',
+  eventMgmt = 'eventMgmt',
+  sheTeam = 'sheTeam',
+  internship = 'internship',
   execomCore = 'execomCore',
   generalMember = 'generalMember',
   facultyAdvisor = 'facultyAdvisor'
 }
+
+export const ROOT_ADMINS = [
+  "adhithyamohans.b24ec1205@mbcet.ac.in",
+  "govindwarrier.b25ec1232@mbcet.ac.in",
+  "snithshibu.b23ec1156@mbcet.ac.in",
+  "melvin.jacob@mbcet.ac.in"
+];
 
 export enum UserStatus {
   active = 'active',

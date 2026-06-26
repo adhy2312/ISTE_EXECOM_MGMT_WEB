@@ -21,14 +21,18 @@ type Tab = "overview" | "analytics" | "approvals" | "members" | "access" | "buil
 
 // ── Role metadata (Light theme tailored) ──────────────────────────────────
 const ROLE_OPTIONS: { value: UserRole; label: string; color: string; bg: string }[] = [
-  { value: UserRole.chapterAdmin,  label: "PR Head",         color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
-  { value: UserRole.secretary,     label: "Secretary",        color: "#5B21B6", bg: "rgba(91,33,182,0.1)" },
-  { value: UserRole.treasurer,     label: "Treasurer",        color: "#0369A1", bg: "rgba(3,105,161,0.1)" },
-  { value: UserRole.techHead,      label: "Tech Head",        color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
-  { value: UserRole.prMedia,       label: "PR & Media",       color: "#BE185D", bg: "rgba(190,24,93,0.1)" },
-  { value: UserRole.execomCore,    label: "ExeCom Core",      color: "#047857", bg: "rgba(4,120,87,0.1)" },
-  { value: UserRole.generalMember, label: "General Member",   color: "#475569", bg: "rgba(71,85,105,0.1)" },
-  { value: UserRole.facultyAdvisor,label: "Faculty Advisor",  color: "#0F766E", bg: "rgba(15,118,110,0.1)" },
+  { value: UserRole.chapterAdmin,   label: "Admin / Chairperson",       color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
+  { value: UserRole.execomCore,     label: "Core Team Member",   color: "#047857", bg: "rgba(4,120,87,0.1)" },
+  { value: UserRole.prMedia,        label: "PR & Media Team",    color: "#BE185D", bg: "rgba(190,24,93,0.1)" },
+  { value: UserRole.contentDoc,     label: "Content & Documentation",     color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
+  { value: UserRole.designTeam,     label: "Design Team",     color: "#C026D3", bg: "rgba(192,38,211,0.1)" },
+  { value: UserRole.eventMgmt,      label: "Event Management",     color: "#EA580C", bg: "rgba(234,88,12,0.1)" },
+  { value: UserRole.sheTeam,        label: "SHE Team",     color: "#16A34A", bg: "rgba(22,163,74,0.1)" },
+  { value: UserRole.internship,     label: "Internship Launchpad",     color: "#0284C7", bg: "rgba(2,132,199,0.1)" },
+  { value: UserRole.secretary,      label: "Secretary",     color: "#5B21B6", bg: "rgba(91,33,182,0.1)" },
+  { value: UserRole.treasurer,      label: "Treasurer",     color: "#0369A1", bg: "rgba(3,105,161,0.1)" },
+  { value: UserRole.generalMember,  label: "General Member",color: "#475569", bg: "rgba(71,85,105,0.1)" },
+  { value: UserRole.facultyAdvisor, label: "Faculty Advisor",color:"#0F766E", bg: "rgba(15,118,110,0.1)" },
 ];
 
 const getRoleConfig = (role: UserRole) =>
@@ -39,7 +43,7 @@ const emptyForm = { email: "", role: UserRole.generalMember, designation: "" };
 
 export default function ExecutivePage() {
   const { user, logout } = useAuthStore();
-  const { members, teams, fetchMembers, fetchTeams, createTeam, deleteTeam } = useMembersStore();
+  const { members, teams, fetchMembers, fetchTeams } = useMembersStore();
   const { requests, isLoading: pointsLoading, fetchAllPending, approveRequest, rejectRequest } = usePointsStore();
   const {
     allowedUsers, isLoading: adminLoading,

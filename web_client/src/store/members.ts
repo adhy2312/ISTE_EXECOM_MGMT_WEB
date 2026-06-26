@@ -11,8 +11,7 @@ interface MembersState {
   error: string | null;
   fetchMembers: () => Promise<void>;
   fetchTeams: () => Promise<void>;
-  createTeam: (name: string, description: string, leaderId?: string | null) => Promise<void>;
-  deleteTeam: (teamId: string) => Promise<void>;
+  fetchTeams: () => void;
   updateMemberProfile: (uid: string, updates: Partial<ExecomMember>) => Promise<void>;
   uploadProfilePicture: (uid: string, file: File) => Promise<string>;
 }
@@ -37,41 +36,22 @@ export const useMembersStore = create<MembersState>((set) => ({
     }
   },
 
-  fetchTeams: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const snap = await getDocs(collection(db, 'teams'));
-      const teams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
-      set({ teams, isLoading: false });
-    } catch (e: unknown) {
-      set({ error: (e as Error).message, isLoading: false });
-    }
+  fetchTeams: () => {
+    set({
+      teams: [
+        { id: "core", name: "Core Team", description: "Mentors, Faculty, Chair, Vice Chair, Secretary, Treasurer", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "pr_media", name: "PR & Media Team", description: "Public Relations and Media Management", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "content_doc", name: "Content & Documentation Team", description: "Content Strategy and Records", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "design", name: "Design Team", description: "UI/UX, Graphics, and Branding", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "event_mgmt", name: "Event Management Team", description: "Planning and Execution of Events", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "she", name: "SHE Team", description: "Safety, Health, and Environment", leaderId: null, memberIds: [], createdAt: new Date().toISOString() },
+        { id: "internship", name: "Internship Launchpad Team", description: "Career and Internship Opportunities", leaderId: null, memberIds: [], createdAt: new Date().toISOString() }
+      ],
+      isLoading: false
+    });
   },
 
-  createTeam: async (name, description, leaderId = null) => {
-    set({ isLoading: true, error: null });
-    try {
-      const newTeam = {
-        name, description, leaderId, memberIds: [] as string[], createdAt: new Date().toISOString()
-      };
-      const docRef = await addDoc(collection(db, 'teams'), newTeam);
-      set(state => ({ teams: [...state.teams, { id: docRef.id, ...newTeam } as Team], isLoading: false }));
-    } catch (e: unknown) {
-      set({ error: (e as Error).message, isLoading: false });
-      throw e;
-    }
-  },
 
-  deleteTeam: async (teamId) => {
-    set({ isLoading: true, error: null });
-    try {
-      await deleteDoc(doc(db, 'teams', teamId));
-      set(state => ({ teams: state.teams.filter(t => t.id !== teamId), isLoading: false }));
-    } catch (e: unknown) {
-      set({ error: (e as Error).message, isLoading: false });
-      throw e;
-    }
-  },
 
   updateMemberProfile: async (uid, updates) => {
     set({ isLoading: true, error: null });

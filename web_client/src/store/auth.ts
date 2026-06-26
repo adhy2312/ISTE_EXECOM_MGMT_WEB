@@ -140,6 +140,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithPopup(auth, provider);
     } catch (e: unknown) {
       const err = e as Error & { code?: string };

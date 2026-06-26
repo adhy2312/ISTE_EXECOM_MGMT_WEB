@@ -22,12 +22,16 @@ type Tab = "builder" | "privileges" | "evaluation" | "access" | "audit";
 const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
 
 const ROLE_OPTIONS: { value: UserRole; label: string; color: string; bg: string }[] = [
-  { value: UserRole.chapterAdmin,   label: "PR Head",       color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
+  { value: UserRole.chapterAdmin,   label: "Admin / Chairperson",       color: "#4338CA", bg: "rgba(67,56,202,0.1)" },
+  { value: UserRole.execomCore,     label: "Core Team Member",   color: "#047857", bg: "rgba(4,120,87,0.1)" },
+  { value: UserRole.prMedia,        label: "PR & Media Team",    color: "#BE185D", bg: "rgba(190,24,93,0.1)" },
+  { value: UserRole.contentDoc,     label: "Content & Documentation",     color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
+  { value: UserRole.designTeam,     label: "Design Team",     color: "#C026D3", bg: "rgba(192,38,211,0.1)" },
+  { value: UserRole.eventMgmt,      label: "Event Management",     color: "#EA580C", bg: "rgba(234,88,12,0.1)" },
+  { value: UserRole.sheTeam,        label: "SHE Team",     color: "#16A34A", bg: "rgba(22,163,74,0.1)" },
+  { value: UserRole.internship,     label: "Internship Launchpad",     color: "#0284C7", bg: "rgba(2,132,199,0.1)" },
   { value: UserRole.secretary,      label: "Secretary",     color: "#5B21B6", bg: "rgba(91,33,182,0.1)" },
   { value: UserRole.treasurer,      label: "Treasurer",     color: "#0369A1", bg: "rgba(3,105,161,0.1)" },
-  { value: UserRole.techHead,       label: "Tech Head",     color: "#1D4ED8", bg: "rgba(29,78,216,0.1)" },
-  { value: UserRole.prMedia,        label: "PR & Media",    color: "#BE185D", bg: "rgba(190,24,93,0.1)" },
-  { value: UserRole.execomCore,     label: "ExeCom Core",   color: "#047857", bg: "rgba(4,120,87,0.1)" },
   { value: UserRole.generalMember,  label: "General Member",color: "#475569", bg: "rgba(71,85,105,0.1)" },
   { value: UserRole.facultyAdvisor, label: "Faculty Advisor",color:"#0F766E", bg: "rgba(15,118,110,0.1)" },
 ];
@@ -45,7 +49,7 @@ const emptyWhitelistForm = { email: "", role: UserRole.generalMember, designatio
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
-  const { members, teams, fetchMembers, fetchTeams, createTeam, deleteTeam, updateMemberProfile } = useMembersStore();
+  const { members, teams, fetchMembers, fetchTeams, updateMemberProfile } = useMembersStore();
   const { allowedUsers, auditLogs, isLoading: adminLoading, subscribeToAllowedUsers, fetchAuditLogs, addAllowedUser, updateAllowedUser, removeAllowedUser } = useAdminStore();
   const { allEvaluations, allContributions, fetchAllEvaluations, fetchMemberContributions, updateEvaluation, updateContributionStatus } = useEvaluationStore();
   const router = useRouter();
@@ -56,8 +60,6 @@ export default function SettingsPage() {
   // Builder state
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ExecomMember>>({});
-  const [newTeamName, setNewTeamName] = useState("");
-  const [newTeamDesc, setNewTeamDesc] = useState("");
   const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
   const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
 
@@ -226,20 +228,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Create Team Form */}
-            <div className="glass-panel fade-up" style={{ padding: "20px", marginBottom: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
-              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="New Team Name" style={{ flex: 1, width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
-              <input value={newTeamDesc} onChange={e => setNewTeamDesc(e.target.value)} placeholder="Team Description" style={{ flex: 2, width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid var(--border)", fontSize: 14, outline: "none", background: "white", color: "var(--text-primary)", transition: "border-color 0.2s" }} />
-              <button 
-                onClick={async () => {
-                  if(!newTeamName) return;
-                  await createTeam(newTeamName, newTeamDesc);
-                  setNewTeamName(""); setNewTeamDesc("");
-                }} 
-                style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer", display: "flex", gap: 6, alignItems: "center" }}>
-                <PlusCircle size={16} /> Add Team
-              </button>
-            </div>
+
 
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {teams.map(team => {
@@ -255,7 +244,6 @@ export default function SettingsPage() {
                         <h3 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{team.name}</h3>
                         {team.description && <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{team.description}</p>}
                       </div>
-                      <button onClick={() => { if(confirm("Delete team?")) deleteTeam(team.id); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer" }}><Trash2 size={18} /></button>
                     </div>
 
                     {/* Team Members List */}
