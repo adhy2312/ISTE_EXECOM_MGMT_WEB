@@ -11,7 +11,7 @@ interface MembersState {
   error: string | null;
   fetchMembers: () => Promise<void>;
   fetchTeams: () => Promise<void>;
-  fetchTeams: () => void;
+
   updateMemberProfile: (uid: string, updates: Partial<ExecomMember>) => Promise<void>;
   uploadProfilePicture: (uid: string, file: File) => Promise<string>;
 }
