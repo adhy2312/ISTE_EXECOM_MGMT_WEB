@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
-import { HubEvent, HubMeeting, HubVaultResource, HubAssetRequest } from "@/types/hub";
+import { HubEvent, HubMeeting, HubVaultResource } from "@/types/hub";
 
 interface HubState {
   events: HubEvent[];
   meetings: HubMeeting[];
   vaultResources: HubVaultResource[];
-  assetRequests: HubAssetRequest[];
+
   loading: boolean;
   
   fetchEvents: () => Promise<void>;
@@ -22,16 +22,14 @@ interface HubState {
   addVaultResource: (resource: Omit<HubVaultResource, 'id' | 'createdAt'>) => Promise<void>;
   deleteVaultResource: (id: string) => Promise<void>;
 
-  fetchAssetRequests: () => Promise<void>;
-  requestAsset: (req: Omit<HubAssetRequest, 'id' | 'createdAt'>) => Promise<void>;
-  updateAssetRequest: (id: string, status: "pending" | "approved" | "rejected") => Promise<void>;
+
 }
 
 export const useHubStore = create<HubState>((set, get) => ({
   events: [],
   meetings: [],
   vaultResources: [],
-  assetRequests: [],
+
   loading: false,
 
   fetchEvents: async () => {
@@ -138,42 +136,5 @@ export const useHubStore = create<HubState>((set, get) => ({
       throw error;
     }
   },
-
-  fetchAssetRequests: async () => {
-    set({ loading: true });
-    try {
-      const q = query(collection(db, "asset_requests"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      const reqs = snap.docs.map(d => ({ id: d.id, ...d.data() } as HubAssetRequest));
-      set({ assetRequests: reqs, loading: false });
-    } catch (error) {
-      console.error(error);
-      set({ loading: false });
-    }
-  },
-
-  requestAsset: async (req) => {
-    try {
-      const docRef = await addDoc(collection(db, "asset_requests"), {
-        ...req,
-        createdAt: Date.now()
-      });
-      const newReq = { id: docRef.id, ...req, createdAt: Date.now() } as HubAssetRequest;
-      set((state) => ({ assetRequests: [newReq, ...state.assetRequests] }));
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  updateAssetRequest: async (id, status) => {
-    try {
-      await updateDoc(doc(db, "asset_requests", id), { status });
-      set((state) => ({
-        assetRequests: state.assetRequests.map(r => r.id === id ? { ...r, status } : r)
-      }));
-    } catch (error) {
-      throw error;
-    }
-  }
 
 }));

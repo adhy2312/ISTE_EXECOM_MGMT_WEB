@@ -29,7 +29,6 @@ export default function HubPage() {
     { title: "Events Ops", icon: Calendar, color: "#2563EB", bg: "rgba(37,99,235,0.1)", href: "/hub/events" },
     { title: "Meetings", icon: Users, color: "#D97706", bg: "rgba(217,119,6,0.1)", href: "/hub/meetings" },
     { title: "Resource Vault", icon: Folder, color: "var(--brand)", bg: "var(--brand-glow)", href: "/hub/vault" },
-    { title: "Asset Tracker", icon: Box, color: "#059669", bg: "rgba(5,150,105,0.1)", href: "/hub/assets" },
   ];
 
   return (

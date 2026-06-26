@@ -23,7 +23,9 @@ export default function MeetingsPage() {
     completedItems: 0,
     attendance: 0,
     total: 0,
-    meetLink: ""
+    meetLink: "",
+    agendaUrl: "",
+    minutesUrl: ""
   });
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function MeetingsPage() {
     try {
       await addMeeting(newMeeting);
       setIsCreating(false);
-      setNewMeeting({ title: "", date: "", status: "upcoming", actionItems: 0, completedItems: 0, attendance: 0, total: 0, meetLink: "" });
+      setNewMeeting({ title: "", date: "", status: "upcoming", actionItems: 0, completedItems: 0, attendance: 0, total: 0, meetLink: "", agendaUrl: "", minutesUrl: "" });
     } catch (err) {
       console.error(err);
     } finally {
@@ -160,6 +162,30 @@ export default function MeetingsPage() {
                       Open Link <ExternalLink size={14} />
                     </button>
                   )}
+                  {m.agendaUrl && (
+                    <button 
+                      onClick={() => window.open(m.agendaUrl, "_blank")}
+                      style={{ 
+                        background: "var(--brand-glow)", border: "1px solid var(--brand)", 
+                        borderRadius: 12, padding: "8px 16px", color: "var(--brand)", 
+                        fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                      }}
+                    >
+                      View Agenda <FileText size={14} />
+                    </button>
+                  )}
+                  {m.minutesUrl && (
+                    <button 
+                      onClick={() => window.open(m.minutesUrl, "_blank")}
+                      style={{ 
+                        background: "var(--success-light)", border: "1px solid var(--success)", 
+                        borderRadius: 12, padding: "8px 16px", color: "var(--success)", 
+                        fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                      }}
+                    >
+                      View Minutes <FileText size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -229,6 +255,14 @@ export default function MeetingsPage() {
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Meeting Link (Optional)</label>
                 <input type="url" value={newMeeting.meetLink} onChange={e => setNewMeeting({...newMeeting, meetLink: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://meet.google.com/..." />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Agenda URL (Optional)</label>
+                <input type="url" value={newMeeting.agendaUrl} onChange={e => setNewMeeting({...newMeeting, agendaUrl: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://docs.google.com/..." />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Minutes URL (Optional)</label>
+                <input type="url" value={newMeeting.minutesUrl} onChange={e => setNewMeeting({...newMeeting, minutesUrl: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://docs.google.com/..." />
               </div>
               
               <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 10, padding: 14, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}>

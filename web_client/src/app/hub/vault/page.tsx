@@ -6,6 +6,8 @@ import { ChevronLeft, Plus, Folder, Link as LinkIcon, Download, FileText, Search
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHubStore } from "@/store/hub";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
 export default function VaultPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,6 +17,7 @@ export default function VaultPage() {
   const { vaultResources, fetchVault, addVaultResource, deleteVaultResource } = useHubStore();
   const [isCreating, setIsCreating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [newResource, setNewResource] = useState({
     name: "",
     type: "link" as const,
@@ -48,9 +51,20 @@ export default function VaultPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await addVaultResource(newResource);
+      let finalUrl = newResource.url;
+      let finalSize = newResource.size;
+      
+      if (file && !["link", "folder"].includes(newResource.type)) {
+        const fileRef = ref(storage, `vault_resources/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        finalUrl = await getDownloadURL(fileRef);
+        finalSize = (file.size / 1024 / 1024).toFixed(1) + " MB";
+      }
+
+      await addVaultResource({ ...newResource, url: finalUrl, size: finalSize });
       setIsCreating(false);
       setNewResource({ name: "", type: "link", category: "links", url: "", description: "", size: "" });
+      setFile(null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -252,10 +266,19 @@ export default function VaultPage() {
                   </select>
                 </div>
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>URL / File Link</label>
-                <input required type="url" value={newResource.url} onChange={e => setNewResource({...newResource, url: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://..." />
-              </div>
+              
+              {!["link", "folder"].includes(newResource.type) ? (
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Upload File</label>
+                  <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>URL / Link</label>
+                  <input required type="url" value={newResource.url} onChange={e => setNewResource({...newResource, url: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://..." />
+                </div>
+              )}
+
               <div>
                 <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Description (Optional)</label>
                 <textarea value={newResource.description} onChange={e => setNewResource({...newResource, description: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14, minHeight: 60 }} placeholder="Brief info..." />

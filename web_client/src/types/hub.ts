@@ -25,6 +25,8 @@ export interface HubMeeting {
   attendance: number;
   total: number;
   meetLink?: string;
+  agendaUrl?: string;
+  minutesUrl?: string;
   createdAt: number;
 }
 
@@ -40,12 +42,4 @@ export interface HubVaultResource {
   createdAt: number;
 }
 
-export interface HubAssetRequest {
-  id: string;
-  assetName: string;
-  requesterId: string;
-  requesterEmail: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: number;
-}
+

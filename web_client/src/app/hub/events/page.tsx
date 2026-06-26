@@ -138,12 +138,12 @@ export default function EventsOpsPage() {
 
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
-                        <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }}>
+                        <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4, position: "relative", zIndex: 10 }}>
                           <MoreVertical size={20} />
                         </button>
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Portal>
-                        <DropdownMenu.Content className="dropdown-content glass-panel" style={{ minWidth: 150, zIndex: 100, padding: 8 }}>
+                        <DropdownMenu.Content className="dropdown-content glass-panel" style={{ minWidth: 150, zIndex: 99999, padding: 8 }}>
                           <DropdownMenu.Item className="dropdown-item" onSelect={() => deleteEvent(evt.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "var(--error)", fontSize: 13, fontWeight: 600 }}>
                             <Trash2 size={14} /> Delete Event
                           </DropdownMenu.Item>
