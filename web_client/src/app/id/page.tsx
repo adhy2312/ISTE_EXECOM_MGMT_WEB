@@ -76,7 +76,7 @@ export default function IDPage() {
   };
 
   return (
-    <div style={{ paddingBottom: "100px", perspective: "1000px", padding: "20px 20px 100px", maxWidth: 500, margin: "0 auto" }}>
+    <div style={{ perspective: "1000px", padding: "20px 20px 100px 20px", maxWidth: 500, margin: "0 auto" }}>
       <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="outfit-font" style={{ fontSize: "28px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px", fontWeight: "800" }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center" }}>

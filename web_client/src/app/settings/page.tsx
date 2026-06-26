@@ -214,7 +214,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Tab Content ──────────────────────────────────────────────────── */}
-      <div ref={containerRef} style={{ padding: "24px 20px", maxWidth: 900, margin: "0 auto", width: "100%", paddingBottom: 100 }}>
+      <div ref={containerRef} style={{ padding: "24px 20px 100px 20px", maxWidth: 900, margin: "0 auto", width: "100%" }}>
 
         {/* ════════════════════ BUILDER TAB ════════════════════ */}
         {activeTab === "builder" && (

@@ -25,7 +25,7 @@ export default function AssetsPage() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ paddingBottom: 100, padding: "20px 20px 100px", maxWidth: 700, margin: "0 auto" }}>
+    <div ref={containerRef} style={{ padding: "20px 20px 100px 20px", maxWidth: 700, margin: "0 auto" }}>
       <header className="fade-up" style={{ marginBottom: "2rem", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href="/hub" style={{ color: "var(--text-secondary)", display: "flex", alignItems: "center", textDecoration: "none", background: "var(--bg-elevated)", padding: 8, borderRadius: 12, border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
           <ChevronLeft size={20} />

@@ -97,7 +97,7 @@ export default function PointsPage() {
     .reduce((sum, r) => sum + (r.awardedPoints ?? 0), 0);
 
   return (
-    <div ref={containerRef} style={{ paddingBottom: 100, padding: "20px 20px 100px", maxWidth: 700, margin: "0 auto" }}>
+    <div ref={containerRef} style={{ padding: "20px 20px 100px 20px", maxWidth: 700, margin: "0 auto" }}>
       {/* Header */}
       <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
         <div>

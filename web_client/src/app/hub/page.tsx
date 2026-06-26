@@ -33,7 +33,7 @@ export default function HubPage() {
   ];
 
   return (
-    <div ref={containerRef} style={{ paddingBottom: "100px", padding: "20px 20px 100px", maxWidth: 600, margin: "0 auto" }}>
+    <div ref={containerRef} style={{ padding: "20px 20px 100px 20px", maxWidth: 600, margin: "0 auto" }}>
       <header style={{ marginBottom: "2.5rem" }}>
         <h1 style={{ fontSize: "28px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px", fontWeight: "800" }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center" }}>

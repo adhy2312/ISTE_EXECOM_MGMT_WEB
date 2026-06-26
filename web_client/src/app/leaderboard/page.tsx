@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div ref={containerRef} style={{ paddingBottom: 100, padding: "20px 20px 100px", maxWidth: 600, margin: "0 auto" }}>
+    <div ref={containerRef} style={{ padding: "20px 20px 100px 20px", maxWidth: 600, margin: "0 auto" }}>
       <header style={{ marginBottom: "2.5rem", textAlign: "center", paddingTop: 10 }}>
         <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: 16, background: "var(--brand-glow)", marginBottom: 16, boxShadow: "0 8px 24px var(--brand-glow)" }}>
           <Trophy color="var(--brand)" size={28} strokeWidth={2.5} />

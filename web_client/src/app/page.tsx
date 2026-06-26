@@ -122,7 +122,7 @@ export default function HomePage() {
   const pendingTasks = tasks.filter(t => t.state !== "completed");
 
   return (
-    <div ref={containerRef} style={{ padding: "24px 20px", paddingBottom: "100px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div ref={containerRef} style={{ padding: "24px 20px 100px 20px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Greeting Header */}
       <header className="stagger-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
