@@ -24,7 +24,7 @@ interface EvaluationStore {
   fetchMemberContributions: (memberId: string) => Promise<void>;
   updateEvaluation: (
     memberId: string,
-    scores: Partial<Pick<EvaluationScore, 'departmentScore' | 'initiativeScore' | 'reliabilityScore' | 'attendanceScore'>>,
+    scores: Partial<Pick<EvaluationScore, 'departmentScore' | 'initiativeScore' | 'reliabilityScore' | 'attendanceScore' | 'eventAllocations'>>,
     adminId: string
   ) => Promise<void>;
   updateContributionStatus: (memberId: string, entryId: string, status: ContributionStatus, note?: string) => Promise<void>;
@@ -117,11 +117,15 @@ export const useEvaluationStore = create<EvaluationStore>((set, get) => ({
       };
 
       const merged = { ...base, ...scores };
+      
+      const eventPoints = (merged.eventAllocations || []).reduce((sum, ev) => sum + ev.points, 0);
+
       const totalScore =
         (merged.departmentScore || 0) +
         (merged.initiativeScore || 0) +
         (merged.reliabilityScore || 0) +
-        (merged.attendanceScore || 0);
+        (merged.attendanceScore || 0) +
+        eventPoints;
 
       const evalDoc: EvaluationScore = {
         memberId,
@@ -129,6 +133,7 @@ export const useEvaluationStore = create<EvaluationStore>((set, get) => ({
         initiativeScore: merged.initiativeScore || 0,
         reliabilityScore: merged.reliabilityScore || 0,
         attendanceScore: merged.attendanceScore || 0,
+        eventAllocations: merged.eventAllocations || [],
         totalScore,
         lastUpdated: new Date().toISOString(),
         updatedBy: adminId,

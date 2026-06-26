@@ -145,12 +145,21 @@ export interface Team {
 
 // ─── Performance Evaluation ─────────────────────────────────────────────────
 
+export interface EventPointAllocation {
+  id: string;
+  eventName: string;
+  points: number;
+  note?: string;
+  allocatedAt: string; // ISO string
+}
+
 export interface EvaluationScore {
   memberId: string;
   departmentScore: number;    // 0–6
   initiativeScore: number;    // 0–2
   reliabilityScore: number;   // 0–1
   attendanceScore: number;    // 0–1
+  eventAllocations?: EventPointAllocation[];
   totalScore: number;         // sum of above, 0–10
   lastUpdated: string;        // ISO string
   updatedBy: string;          // admin uid

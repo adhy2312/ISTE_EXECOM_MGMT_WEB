@@ -12,6 +12,7 @@ import {
   Plus, X, Calendar, Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 
 const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
 
@@ -58,7 +59,7 @@ export default function EvaluationPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === ROOT_ADMIN;
+  const isAdmin = isRootOrChapterAdmin(user);
 
   const [showSystem, setShowSystem] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -198,6 +199,23 @@ export default function EvaluationPage() {
             );
           })}
         </div>
+
+        {/* Event Allocations Breakdown */}
+        {evalData?.eventAllocations && evalData.eventAllocations.length > 0 && (
+          <div style={{ marginTop: 24, padding: 16, background: "var(--bg-muted)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+               Event Points
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {evalData.eventAllocations.map(ev => (
+                <div key={ev.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "rgba(255,255,255,0.6)", borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>{ev.eventName}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "var(--brand)" }}>+{ev.points} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Contribution Log ──────────────────────────────────────────────── */}

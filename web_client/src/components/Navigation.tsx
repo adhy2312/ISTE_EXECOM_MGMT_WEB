@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
 import { UserRole } from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
@@ -39,7 +40,7 @@ export function Navigation() {
   if (!user || NAVLESS_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
   const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
-  const isAdmin = user.role === UserRole.chapterAdmin || user.email === ROOT_ADMIN;
+  const isAdmin = isRootOrChapterAdmin(user);
   const isFaculty = user.role === UserRole.facultyAdvisor;
 
   // ── Role-based dock items ──

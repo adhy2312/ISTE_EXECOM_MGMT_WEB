@@ -7,7 +7,8 @@ import { useDashboardStore } from "@/store/dashboard";
 import { useTasksStore } from "@/store/tasks";
 import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { UserRole } from "@/types/models";
+import { EnergyPointStatus, UserRole } from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function HomePage() {
@@ -16,7 +17,7 @@ export default function HomePage() {
   const { tasks, isLoading: tasksLoading, fetchTasks } = useTasksStore();
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
+  const isAdmin = isRootOrChapterAdmin(user);
 
   useEffect(() => {
     if (user) {

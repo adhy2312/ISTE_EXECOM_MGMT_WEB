@@ -17,6 +17,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart as RPieChart, Pie, Cell, Legend,
 } from "recharts";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 
 type Tab = "overview" | "analytics" | "finance";
 
@@ -44,7 +45,7 @@ export default function ObservatoryPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      const isChairperson = user.role === UserRole.chapterAdmin || user.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
+      const isChairperson = isRootOrChapterAdmin(user);
       const isFaculty = user.role === UserRole.facultyAdvisor;
       if (!isChairperson && !isFaculty) {
         router.replace("/");

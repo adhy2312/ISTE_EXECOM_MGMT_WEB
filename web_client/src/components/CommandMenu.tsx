@@ -8,6 +8,7 @@ import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
 import { UserRole, ExecomMember } from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 import "./command-menu.css";
 
 export function CommandMenu() {
@@ -17,7 +18,7 @@ export function CommandMenu() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  const isAdmin = user?.role === UserRole.chapterAdmin;
+  const isAdmin = isRootOrChapterAdmin(user);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

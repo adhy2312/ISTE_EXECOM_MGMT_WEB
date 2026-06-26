@@ -6,8 +6,6 @@ import { useAuthStore } from "@/store/auth";
 import { useMembersStore } from "@/store/members";
 import { useAdminStore } from "@/store/admin";
 import { useEvaluationStore } from "@/store/evaluation";
-import { UserRole, ExecomMember } from "@/types/models";
-import gsap from "gsap";
 import {
   Settings, Users, ShieldCheck, BarChart2, FileText,
   Crown, PlusCircle, Save, X, Edit3, Trash2,
@@ -16,6 +14,8 @@ import {
   LogOut, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { UserRole, ExecomMember, ContributionEntry } from "@/types/models";
+import { hasPermission, Permission, isRootOrChapterAdmin } from "@/utils/permissions";
 
 type Tab = "builder" | "privileges" | "evaluation" | "access" | "audit";
 
@@ -64,7 +64,7 @@ export default function SettingsPage() {
   const [evalDraft, setEvalDraft] = useState<Record<string, number>>({});
   const [expandedContribs, setExpandedContribs] = useState<string | null>(null);
 
-  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === ROOT_ADMIN;
+  const isAdmin = isRootOrChapterAdmin(user);
 
   useEffect(() => {
     if (!isAdmin) { router.replace("/"); return; }
@@ -110,6 +110,7 @@ export default function SettingsPage() {
       initiativeScore: existing?.initiativeScore ?? 0,
       reliabilityScore: existing?.reliabilityScore ?? 0,
       attendanceScore: existing?.attendanceScore ?? 0,
+      eventAllocations: existing?.eventAllocations ?? [],
     });
   };
   const saveEval = async (memberId: string) => {
@@ -120,6 +121,7 @@ export default function SettingsPage() {
         initiativeScore: evalDraft.initiativeScore ?? 0,
         reliabilityScore: evalDraft.reliabilityScore ?? 0,
         attendanceScore: evalDraft.attendanceScore ?? 0,
+        eventAllocations: evalDraft.eventAllocations ?? [],
       }, user.id);
       toast.success("Evaluation scores saved!");
       setExpandedMemberEval(null);
@@ -381,7 +383,9 @@ export default function SettingsPage() {
                 const contribsExpanded = expandedContribs === m.id;
                 const contribs = allContributions[m.id] ?? [];
                 const pendingCount = contribs.filter(c => c.status === "pending").length;
-                const totalScore = (evalDraft.departmentScore ?? 0) + (evalDraft.initiativeScore ?? 0) + (evalDraft.reliabilityScore ?? 0) + (evalDraft.attendanceScore ?? 0);
+                
+                const eventPoints = (evalDraft.eventAllocations || []).reduce((sum, ev) => sum + ev.points, 0);
+                const totalScore = (evalDraft.departmentScore ?? 0) + (evalDraft.initiativeScore ?? 0) + (evalDraft.reliabilityScore ?? 0) + (evalDraft.attendanceScore ?? 0) + eventPoints;
 
                 return (
                   <div key={m.id} className="glass-panel fade-up" style={{ padding: "20px 24px" }}>
@@ -392,7 +396,7 @@ export default function SettingsPage() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{m.fullName}</div>
-                        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{m.designation} · {m.department || "No dept."}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{m.designation} · Dept No: {m.department || "N/A"}</div>
                       </div>
                       <div style={{ textAlign: "right", marginRight: 8 }}>
                         <div style={{ fontSize: 22, fontWeight: 800, color: "var(--brand)" }}>{evalData?.totalScore ?? "–"}</div>
@@ -438,7 +442,42 @@ export default function SettingsPage() {
                             />
                           </div>
                         ))}
-                        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                        
+                        {/* Event Points Section */}
+                        <div style={{ marginTop: 24, padding: 16, background: "var(--bg-muted)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                          <h4 style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} color="var(--brand)" /> Event Allocations</h4>
+                          {(evalDraft.eventAllocations || []).map((ev, idx) => (
+                            <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                              <input type="text" value={ev.eventName} onChange={e => {
+                                const newAllocs = [...(evalDraft.eventAllocations || [])];
+                                newAllocs[idx].eventName = e.target.value;
+                                setEvalDraft({ ...evalDraft, eventAllocations: newAllocs });
+                              }} placeholder="Event Name" style={{ flex: 1, ...inputSt, padding: "8px 12px" }} />
+                              <input type="number" value={ev.points} onChange={e => {
+                                const newAllocs = [...(evalDraft.eventAllocations || [])];
+                                newAllocs[idx].points = Number(e.target.value);
+                                setEvalDraft({ ...evalDraft, eventAllocations: newAllocs });
+                              }} placeholder="Pts" style={{ width: 70, ...inputSt, padding: "8px 12px" }} />
+                              <button onClick={() => {
+                                const newAllocs = [...(evalDraft.eventAllocations || [])];
+                                newAllocs.splice(idx, 1);
+                                setEvalDraft({ ...evalDraft, eventAllocations: newAllocs });
+                              }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer", padding: 8 }}>
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                          <button onClick={() => {
+                            setEvalDraft({
+                              ...evalDraft,
+                              eventAllocations: [...(evalDraft.eventAllocations || []), { id: Date.now().toString(), eventName: "", points: 0, allocatedAt: new Date().toISOString() }]
+                            });
+                          }} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--brand)", background: "var(--brand-glow)", border: "none", borderRadius: 8, padding: "8px 12px", cursor: "pointer" }}>
+                            <Plus size={14} /> Add Event Points
+                          </button>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
                           <button onClick={() => saveEval(m.id)} style={{ flex: 1, background: "#10B981", border: "none", borderRadius: 12, padding: 13, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 12px rgba(16,185,129,0.25)" }}>
                             <Save size={15} /> Save Scores
                           </button>
@@ -535,6 +574,7 @@ export default function SettingsPage() {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
                             <select value={editWhitelistForm.role} onChange={e => setEditWhitelistForm({ ...editWhitelistForm, role: e.target.value as UserRole })} style={selectSt}>
                               {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            </select>
                             <select value={editWhitelistForm.designation} onChange={e => setEditWhitelistForm({ ...editWhitelistForm, designation: e.target.value })} style={selectSt}>
                               {DESIGNATION_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
                             </select>

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare, Clock, AlertCircle, PlayCircle, CheckCircle2, MoreHorizontal, ArrowRight, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 
 const COLUMNS = [
   { id: TaskState.pending, label: "To Do", icon: CheckSquare, color: "var(--text-secondary)", bg: "var(--bg-muted)" },
@@ -27,7 +28,7 @@ export default function KanbanPage() {
 
   const filteredTasks = useMemo(() => {
     if (!user) return [];
-    const isAdmin = user.role === UserRole.chapterAdmin || ROOT_ADMINS.includes(user.email.toLowerCase().trim());
+    const isAdmin = isRootOrChapterAdmin(user);
     if (isAdmin) return tasks;
     return tasks.filter(t => t.teamId === user.teamId || t.assignedMemberId === user.id);
   }, [tasks, user]);

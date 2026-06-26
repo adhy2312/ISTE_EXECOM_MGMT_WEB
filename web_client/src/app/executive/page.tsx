@@ -7,6 +7,7 @@ import { usePointsStore } from "@/store/points";
 import { useAdminStore } from "@/store/admin";
 import { useTasksStore } from "@/store/tasks";
 import { EnergyPointStatus, UserRole, ExecomMember } from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 import gsap from "gsap";
 import {
   Crown, Zap, CheckCircle2, XCircle,
@@ -61,7 +62,7 @@ export default function ExecutivePage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user && user.role !== UserRole.chapterAdmin && user.email !== "adhithyamohans.b24ec1205@mbcet.ac.in") {
+    if (user && !isRootOrChapterAdmin(user)) {
       router.replace("/");
     }
   }, [user, router]);

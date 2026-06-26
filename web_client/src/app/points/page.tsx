@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/auth";
 import { usePointsStore } from "@/store/points";
 import { EnergyPointStatus, UserRole } from "@/types/models";
+import { isRootOrChapterAdmin } from "@/utils/permissions";
 import gsap from "gsap";
 import { Zap, Plus, Clock, CheckCircle2, XCircle, ExternalLink, AlertTriangle } from "lucide-react";
 import { EnergyPointRequestSchema, validatePayload } from "@/lib/schemas";
@@ -29,7 +30,7 @@ export default function PointsPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const isAdmin = user?.role === UserRole.chapterAdmin || user?.email === "adhithyamohans.b24ec1205@mbcet.ac.in";
+  const isAdmin = isRootOrChapterAdmin(user);
 
   useEffect(() => {
     if (user) fetchMyRequests(user.id);
