@@ -88,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             });
           } else {
             // Auto-create profile on first login using whitelist role
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newUser: any = {
               id: firebaseUser.uid,
               fullName: whitelist.fullName || firebaseUser.displayName || 'New Member',

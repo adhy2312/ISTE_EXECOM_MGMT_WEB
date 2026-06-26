@@ -7,7 +7,7 @@ import { useDashboardStore } from "@/store/dashboard";
 import { useTasksStore } from "@/store/tasks";
 import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { EnergyPointStatus, UserRole } from "@/types/models";
+import {  UserRole } from "@/types/models";
 import { isRootOrChapterAdmin } from "@/utils/permissions";
 import { Skeleton } from "@/components/ui/Skeleton";
 

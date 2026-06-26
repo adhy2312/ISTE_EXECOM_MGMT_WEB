@@ -39,7 +39,7 @@ export function Navigation() {
 
   if (!user || NAVLESS_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
-  const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
+//   const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
   const isAdmin = isRootOrChapterAdmin(user);
   const isFaculty = user.role === UserRole.facultyAdvisor;
 

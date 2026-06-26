@@ -72,6 +72,7 @@ export default function VaultPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderResourceCard = (res: any) => (
     <motion.div 
       layout

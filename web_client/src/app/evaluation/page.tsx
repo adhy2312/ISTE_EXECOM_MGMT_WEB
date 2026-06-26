@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { isRootOrChapterAdmin } from "@/utils/permissions";
 
-const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
+// const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
 
 function ScoreRing({ value, max, color, label, size = 80 }: {
   value: number; max: number; color: string; label: string; size?: number;

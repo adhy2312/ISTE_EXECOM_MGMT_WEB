@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useTasksStore } from "@/store/tasks";
 import { useAuthStore } from "@/store/auth";
-import { TaskState, TaskPriority, UserRole, ROOT_ADMINS } from "@/types/models";
+import { TaskState, TaskPriority } from "@/types/models";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare, Clock, AlertCircle, PlayCircle, CheckCircle2, MoreHorizontal, ArrowRight, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";

@@ -35,7 +35,7 @@ const SCORE_COMPONENTS = [
   { key: "attendanceScore" as const, label: "Attendance", max: 1, color: "var(--warning)", shortLabel: "Att" },
 ];
 
-const emptyWhitelistForm = { email: "", role: UserRole.generalMember, designation: "" };
+// const emptyWhitelistForm = { email: "", role: UserRole.generalMember, designation: "" };
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                           return (
                             <div key={u.email} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px", borderRadius: 12, background: "white", border: "1px solid var(--border-strong)" }}>
                               <div style={{ width: 40, height: 40, borderRadius: "50%", background: profile?.photoURL ? `url(${profile.photoURL}) center/cover` : `linear-gradient(135deg, ${rc.color}, ${rc.color}99)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "white", flexShrink: 0 }}>
-                                {!profile?.photoURL && (u.fullName?.[0] || u.email[0].toUpperCase())}
+                                {!profile?.photoURL && (u.fullName?.charAt(0) || u.email?.charAt(0)?.toUpperCase() || "?")}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -314,7 +314,7 @@ export default function SettingsPage() {
                 return (
                   <div key={m.id} className="glass-panel fade-up" style={{ padding: "18px 22px", display: "flex", alignItems: "center", gap: 16, opacity: isSelf ? 0.7 : 1 }}>
                     <div style={{ width: 44, height: 44, borderRadius: "50%", background: rc.bg, border: `2px solid ${rc.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: rc.color, flexShrink: 0 }}>
-                      {m.fullName.charAt(0)}
+                      {m.fullName?.charAt(0) || m.email?.charAt(0)?.toUpperCase() || "?"}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{m.fullName}</div>
@@ -374,9 +374,9 @@ export default function SettingsPage() {
                 return (
                   <div key={m.id} className="glass-panel fade-up" style={{ padding: "20px 24px" }}>
                     {/* Member header row */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: isExpanded || contribsExpanded ? 16 : 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: isExpanded || contribsExpanded ? 16 : 0 }}>
                       <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, var(--brand), #4338CA)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "white", flexShrink: 0 }}>
-                        {m.fullName.charAt(0)}
+                        {m.fullName?.charAt(0) || m.email?.charAt(0)?.toUpperCase() || "?"}
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{m.fullName}</div>
@@ -569,7 +569,7 @@ export default function SettingsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                               <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>{u.email}</span>
@@ -613,12 +613,12 @@ export default function SettingsPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {auditLogs.map((log, idx) => (
                   <div key={log.id} className="glass-panel fade-up" style={{ padding: "16px 20px", display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: log.action.includes("APPROVE") ? "var(--success-light)" : log.action.includes("REJECT") ? "var(--error-light)" : "var(--brand-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {log.action.includes("APPROVE") ? <CheckCircle2 size={16} color="var(--success)" /> : log.action.includes("REJECT") ? <XCircle size={16} color="var(--error)" /> : <ShieldCheck size={16} color="var(--brand)" />}
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: log.action?.includes("APPROVE") ? "var(--success-light)" : log.action?.includes("REJECT") ? "var(--error-light)" : "var(--brand-light)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {log.action?.includes("APPROVE") ? <CheckCircle2 size={16} color="var(--success)" /> : log.action?.includes("REJECT") ? <XCircle size={16} color="var(--error)" /> : <ShieldCheck size={16} color="var(--brand)" />}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
-                        {log.action.replace(/_/g, " ")}
+                        {log.action?.replace(/_/g, " ") || "UNKNOWN ACTION"}
                         {log.awardedPoints != null && <span style={{ color: "var(--success)", marginLeft: 8 }}>+{log.awardedPoints} XP</span>}
                       </div>
                       <div style={{ display: "flex", gap: 12, marginTop: 4 }}>

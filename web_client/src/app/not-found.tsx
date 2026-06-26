@@ -20,7 +20,7 @@ export default function NotFound() {
           Page Not Found
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 32, lineHeight: 1.6 }}>
-          The module or page you are looking for doesn't exist or you don't have the necessary privileges to view it.
+          The module or page you are looking for doesn&apos;t exist or you don&apos;t have the necessary privileges to view it.
         </p>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Link href="/" style={{ textDecoration: "none" }}>

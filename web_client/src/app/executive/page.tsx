@@ -26,7 +26,6 @@ const getRoleConfig = (role: UserRole) =>
   ROLE_OPTIONS.find((r) => r.value === role) ?? ROLE_OPTIONS[6];
 
 // ── Empty form state ───────────────────────────────────────────────────────
-const emptyForm = { email: "", role: UserRole.generalMember, designation: "" };
 
 export default function ExecutivePage() {
   const { user, logout } = useAuthStore();
@@ -44,7 +43,7 @@ export default function ExecutivePage() {
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [builderEditForm, setBuilderEditForm] = useState<Partial<ExecomMember>>({});
   const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
-  const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
+// //   const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
 
   // Approval states
   const [reviewId, setReviewId] = useState<string | null>(null);
@@ -53,9 +52,6 @@ export default function ExecutivePage() {
   const [processing, setProcessing] = useState(false);
   // Access control states
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState(emptyForm);
-  const [addError, setAddError] = useState("");
-  const [addLoading, setAddLoading] = useState(false);
   const [editEmail, setEditEmail] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ role: UserRole; designation: string }>({ role: UserRole.generalMember, designation: "" });
 
@@ -105,34 +101,7 @@ export default function ExecutivePage() {
     } finally { setProcessing(false); }
   };
 
-  // ── Access control handlers ────────────────────────────────────────────
-  const handleAddUser = async () => {
-    setAddError("");
-    if (!addForm.email.endsWith("@mbcet.ac.in")) {
-      setAddError("Email must be an @mbcet.ac.in address.");
-      return;
-    }
-    if (!addForm.designation.trim()) {
-      setAddError("Please enter a designation.");
-      return;
-    }
-    setAddLoading(true);
-    try {
-      await addAllowedUser({
-        email: addForm.email.toLowerCase().trim(),
-        role: addForm.role,
-        designation: addForm.designation.trim(),
-        isActive: true,
-        addedBy: user?.id ?? "admin",
-      });
-      setAddForm(emptyForm);
-      setShowAddForm(false);
-    } catch (e) {
-      setAddError((e as Error).message);
-    } finally {
-      setAddLoading(false);
-    }
-  };
+
 
   const startEdit = (u: typeof allowedUsers[0]) => {
     setEditEmail(u.email);
@@ -515,7 +484,7 @@ export default function ExecutivePage() {
                 </p>
               </div>
               <button
-                onClick={() => { setShowAddForm(!showAddForm); setAddError(""); setAddForm(emptyForm); }}
+                onClick={() => { setShowAddForm(!showAddForm); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   background: "linear-gradient(135deg, var(--brand), #4338CA)",
@@ -628,7 +597,3 @@ export default function ExecutivePage() {
   );
 }
 
-const labelSt: React.CSSProperties = {
-  fontSize: 12, fontWeight: 800, color: "var(--text-secondary)",
-  textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, display: "block",
-};

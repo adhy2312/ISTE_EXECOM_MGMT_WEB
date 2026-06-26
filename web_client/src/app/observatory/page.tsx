@@ -7,7 +7,7 @@ import { useMembersStore } from "@/store/members";
 import { UserRole, EnergyPointStatus } from "@/types/models";
 import {
   Telescope, Users, Zap, Award, Activity, TrendingUp, Download,
-  BarChart2, DollarSign, Loader2
+  BarChart2, DollarSign
 } from "lucide-react";
 import { usePointsStore } from "@/store/points";
 import jsPDF from "jspdf";
