@@ -110,5 +110,30 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isChapterAdmin();
     }
+
+    // ── Hub: Events ───────────────────────────────────────────────────────
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isChapterAdmin();
+    }
+
+    // ── Hub: Meetings ─────────────────────────────────────────────────────
+    match /meetings/{meetingId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isChapterAdmin();
+    }
+
+    // ── Hub: Vault ────────────────────────────────────────────────────────
+    match /vault_resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isChapterAdmin() || isFacultyAdvisor();
+    }
+
+    // ── Hub: Asset Requests ───────────────────────────────────────────────
+    match /asset_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isChapterAdmin();
+    }
   }
 }

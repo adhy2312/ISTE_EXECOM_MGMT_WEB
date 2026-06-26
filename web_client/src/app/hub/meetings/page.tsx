@@ -2,20 +2,33 @@
 
 import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
-import { ChevronLeft, Plus, CheckCircle2, Clock, Users, FileText, ChevronRight } from "lucide-react";
+import { ChevronLeft, Plus, CheckCircle2, Clock, Users, FileText, ChevronRight, X, Trash2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-const mockMeetings = [
-  { id: 1, title: "ExeCom Core Sync", date: "June 25, 2026", status: "past", actionItems: 4, completedItems: 4, attendance: 12, total: 15 },
-  { id: 2, title: "Symposia Planning", date: "June 29, 2026", status: "upcoming", actionItems: 12, completedItems: 2, attendance: 0, total: 20 },
-  { id: 3, title: "Budget Allocation Q3", date: "July 5, 2026", status: "upcoming", actionItems: 5, completedItems: 0, attendance: 0, total: 8 },
-  { id: 4, title: "Website Launch Debrief", date: "June 10, 2026", status: "past", actionItems: 8, completedItems: 8, attendance: 14, total: 15 },
-];
+import { useHubStore } from "@/store/hub";
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 export default function MeetingsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  
+  const { meetings, fetchMeetings, addMeeting, deleteMeeting } = useHubStore();
+  const [isCreating, setIsCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({
+    title: "",
+    date: "",
+    status: "upcoming" as const,
+    actionItems: 0,
+    completedItems: 0,
+    attendance: 0,
+    total: 0,
+    meetLink: ""
+  });
+
+  useEffect(() => {
+    fetchMeetings();
+  }, [fetchMeetings]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -25,9 +38,23 @@ export default function MeetingsPage() {
         { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out" }
       );
     }
-  }, [activeTab]);
+  }, [activeTab, meetings]);
 
-  const filteredMeetings = mockMeetings.filter(m => m.status === activeTab);
+  const filteredMeetings = meetings.filter(m => m.status === activeTab);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addMeeting(newMeeting);
+      setIsCreating(false);
+      setNewMeeting({ title: "", date: "", status: "upcoming", actionItems: 0, completedItems: 0, attendance: 0, total: 0, meetLink: "" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div ref={containerRef} style={{ padding: "20px 20px 100px 20px", maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -45,7 +72,9 @@ export default function MeetingsPage() {
             </p>
           </div>
         </div>
-        <button className="glass-panel" style={{
+        <button 
+          onClick={() => setIsCreating(true)}
+          className="glass-panel" style={{
           display: "flex", alignItems: "center", gap: 6,
           background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white",
           border: "none", borderRadius: 16, padding: "12px 20px",
@@ -58,96 +87,157 @@ export default function MeetingsPage() {
       </header>
 
       {/* Custom Tab Switcher */}
-      <div className="fade-up" style={{ display: "flex", gap: 8, background: "var(--bg-elevated)", padding: 6, borderRadius: 20, width: "fit-content", marginBottom: 32, border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
-        <button 
+      <div className="fade-up glass-panel" style={{ display: "flex", padding: 6, borderRadius: 20, marginBottom: 24, width: "fit-content", background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
+        <button
           onClick={() => setActiveTab("upcoming")}
           style={{
-            position: "relative", padding: "10px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer",
-            background: "transparent", border: "none", color: activeTab === "upcoming" ? "var(--brand)" : "var(--text-secondary)",
-            zIndex: 1, outline: "none", transition: "color 0.3s"
+            padding: "10px 24px", borderRadius: 14, border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
+            background: activeTab === "upcoming" ? "white" : "transparent",
+            color: activeTab === "upcoming" ? "var(--text-primary)" : "var(--text-secondary)",
+            boxShadow: activeTab === "upcoming" ? "0 4px 12px rgba(0,0,0,0.05)" : "none"
           }}
         >
-          {activeTab === "upcoming" && (
-            <motion.div layoutId="meetingTabBg" style={{ position: "absolute", inset: 0, background: "var(--brand-glow)", borderRadius: 16, zIndex: -1 }} transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
-          )}
           Upcoming
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("past")}
           style={{
-            position: "relative", padding: "10px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer",
-            background: "transparent", border: "none", color: activeTab === "past" ? "var(--brand)" : "var(--text-secondary)",
-            zIndex: 1, outline: "none", transition: "color 0.3s"
+            padding: "10px 24px", borderRadius: 14, border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
+            background: activeTab === "past" ? "white" : "transparent",
+            color: activeTab === "past" ? "var(--text-primary)" : "var(--text-secondary)",
+            boxShadow: activeTab === "past" ? "0 4px 12px rgba(0,0,0,0.05)" : "none"
           }}
         >
-          {activeTab === "past" && (
-            <motion.div layoutId="meetingTabBg" style={{ position: "absolute", inset: 0, background: "var(--brand-glow)", borderRadius: 16, zIndex: -1 }} transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
-          )}
-          Past Records
+          Past Log
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 24 }}>
+      {filteredMeetings.length === 0 && (
+        <div className="fade-up" style={{ textAlign: "center", padding: 60, color: "var(--text-muted)", fontSize: 15, fontWeight: 600 }}>
+          No meetings found in this tab.
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <AnimatePresence mode="popLayout">
-          {filteredMeetings.length === 0 ? (
-             <motion.div 
-               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-               style={{ gridColumn: "1 / -1", textAlign: "center", padding: "60px 20px", color: "var(--text-muted)", fontSize: 15, fontWeight: 500 }}
-             >
-               No {activeTab} meetings found.
-             </motion.div>
-          ) : filteredMeetings.map((mtg) => (
-            <motion.div 
+          {filteredMeetings.map((m) => (
+            <motion.div
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              key={mtg.id} 
-              className="glass-panel" 
-              style={{ padding: 24, border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 20 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+              key={m.id}
+              className="glass-panel fade-up"
+              style={{ display: "flex", flexDirection: "column", padding: "20px 24px", border: "1px solid var(--border)", transition: "all 0.2s" }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", marginBottom: 8, lineHeight: 1.3 }}>{mtg.title}</h3>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-secondary)", fontSize: 13, fontWeight: 600 }}>
-                    <Clock size={14} color="var(--brand)" /> {mtg.date}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: m.status === 'upcoming' ? "#059669" : "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", background: m.status === 'upcoming' ? "rgba(5,150,105,0.1)" : "var(--bg-muted)", padding: "4px 8px", borderRadius: 6 }}>
+                      {m.status}
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--brand)", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Clock size={14} /> {new Date(m.date).toLocaleString()}
+                    </span>
                   </div>
+                  <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{m.title}</h3>
+                </div>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => deleteMeeting(m.id)} style={{ padding: 8, background: "transparent", border: "none", color: "var(--error)", cursor: "pointer" }}>
+                    <Trash2 size={18} />
+                  </button>
+                  {m.meetLink && (
+                    <button 
+                      onClick={() => window.open(m.meetLink, "_blank")}
+                      style={{ 
+                        background: "var(--bg-elevated)", border: "1px solid var(--border)", 
+                        borderRadius: 12, padding: "8px 16px", color: "var(--text-primary)", 
+                        fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                        boxShadow: "var(--shadow-sm)"
+                      }}
+                    >
+                      Open Link <ExternalLink size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
-              
-              <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ flex: 1, background: "var(--bg-muted)", padding: "12px 16px", borderRadius: 16, border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: 4 }}>
-                    <Users size={14} /> Attendance
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "var(--bg-elevated)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(16, 185, 129, 0.1)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <CheckCircle2 size={20} />
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>
-                    {mtg.status === "past" ? `${mtg.attendance}/${mtg.total}` : "Pending"}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 2 }}>Action Items</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>{m.completedItems} / {m.actionItems}</div>
                   </div>
                 </div>
 
-                <div style={{ flex: 1, background: mtg.completedItems === mtg.actionItems && mtg.actionItems > 0 ? "rgba(5,150,105,0.1)" : "var(--bg-muted)", padding: "12px 16px", borderRadius: 16, border: mtg.completedItems === mtg.actionItems && mtg.actionItems > 0 ? "1px solid rgba(5,150,105,0.2)" : "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: mtg.completedItems === mtg.actionItems && mtg.actionItems > 0 ? "#059669" : "var(--text-secondary)", textTransform: "uppercase", marginBottom: 4 }}>
-                    <CheckCircle2 size={14} /> Action Items
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "var(--bg-elevated)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(99, 102, 241, 0.1)", color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Users size={20} />
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: mtg.completedItems === mtg.actionItems && mtg.actionItems > 0 ? "#059669" : "var(--text-primary)" }}>
-                    {mtg.completedItems} <span style={{ fontSize: 14, color: "var(--text-muted)" }}>/ {mtg.actionItems}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 2 }}>Attendance</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>{m.attendance} / {m.total}</div>
                   </div>
                 </div>
               </div>
-
-              <button style={{ 
-                background: "var(--bg-elevated)", color: "var(--text-primary)", border: "1px solid var(--border-strong)", 
-                padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.2s"
-              }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}><FileText size={16} color="var(--brand)" /> View Agenda & Minutes</span>
-                <ChevronRight size={16} color="var(--text-muted)" />
-              </button>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Create Modal */}
+      {isCreating && (
+        <div className="cmdk-overlay" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setIsCreating(false)}>
+          <div className="glass-panel" style={{ width: 450, padding: 24, background: "white" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 className="outfit-font" style={{ fontSize: 20, fontWeight: 800 }}>Schedule Sync</h2>
+              <button onClick={() => setIsCreating(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Title</label>
+                <input required value={newMeeting.title} onChange={e => setNewMeeting({...newMeeting, title: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="e.g. Core Sync" />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Date & Time</label>
+                  <input required type="datetime-local" value={newMeeting.date} onChange={e => setNewMeeting({...newMeeting, date: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Status</label>
+                  <select required value={newMeeting.status} onChange={e => setNewMeeting({...newMeeting, status: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Invited (Total)</label>
+                  <input required type="number" value={newMeeting.total} onChange={e => setNewMeeting({...newMeeting, total: Number(e.target.value)})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Action Items</label>
+                  <input required type="number" value={newMeeting.actionItems} onChange={e => setNewMeeting({...newMeeting, actionItems: Number(e.target.value)})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Meeting Link (Optional)</label>
+                <input type="url" value={newMeeting.meetLink} onChange={e => setNewMeeting({...newMeeting, meetLink: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://meet.google.com/..." />
+              </div>
+              
+              <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 10, padding: 14, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}>
+                {submitting ? "Saving..." : "Schedule Sync"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

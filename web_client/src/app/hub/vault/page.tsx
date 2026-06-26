@@ -2,23 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ChevronLeft, Plus, Folder, Link as LinkIcon, Download, FileText, Search, LayoutGrid, List } from "lucide-react";
+import { ChevronLeft, Plus, Folder, Link as LinkIcon, Download, FileText, Search, LayoutGrid, List, X, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-const mockResources = [
-  { id: 1, name: "ISTE Logo Kit", type: "folder", category: "assets", items: 12 },
-  { id: 2, name: "Sponsorship Deck 2026", type: "pdf", category: "documents", size: "2.4 MB" },
-  { id: 3, name: "Official Letterhead", type: "doc", category: "documents", size: "840 KB" },
-  { id: 4, name: "ExeCom Drive", type: "link", category: "links", url: "https://drive.google.com" },
-  { id: 5, name: "SOP: Event Approval", type: "sop", category: "sops", size: "1.2 MB", description: "Standard operating procedure for getting an event approved." },
-  { id: 6, name: "SOP: Social Media Post", type: "sop", category: "sops", size: "900 KB", description: "Guidelines for Instagram and LinkedIn posts." },
-];
+import { useHubStore } from "@/store/hub";
 
 export default function VaultPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const { vaultResources, fetchVault, addVaultResource, deleteVaultResource } = useHubStore();
+  const [isCreating, setIsCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [newResource, setNewResource] = useState({
+    name: "",
+    type: "link" as const,
+    category: "links" as const,
+    url: "",
+    description: "",
+    size: ""
+  });
+
+  useEffect(() => {
+    fetchVault();
+  }, [fetchVault]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -28,45 +36,68 @@ export default function VaultPage() {
         { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out" }
       );
     }
-  }, []);
+  }, [viewMode, vaultResources]);
 
-  const filteredResources = mockResources.filter(res => res.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredResources = vaultResources.filter(res => res.name.toLowerCase().includes(searchQuery.toLowerCase()));
   
   const folders = filteredResources.filter(r => r.type === 'folder' || r.type === 'link');
   const documents = filteredResources.filter(r => r.type === 'pdf' || r.type === 'doc');
   const sops = filteredResources.filter(r => r.type === 'sop');
 
-  const renderResourceCard = (res: typeof mockResources[0]) => (
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addVaultResource(newResource);
+      setIsCreating(false);
+      setNewResource({ name: "", type: "link", category: "links", url: "", description: "", size: "" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderResourceCard = (res: any) => (
     <motion.div 
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
       key={res.id} 
-      className="glass-panel" 
+      className="glass-panel fade-up"
       style={{ 
-        padding: "20px", border: "1px solid var(--border)", 
-        display: "flex", flexDirection: viewMode === "grid" ? "column" : "row", 
-        alignItems: viewMode === "grid" ? "flex-start" : "center", 
-        justifyContent: "space-between", gap: 16,
-        boxShadow: "var(--shadow-sm)"
+        padding: "20px", display: "flex", 
+        flexDirection: viewMode === "grid" ? "column" : "row", 
+        alignItems: viewMode === "grid" ? "flex-start" : "center",
+        justifyContent: "space-between", gap: 16, border: "1px solid var(--border)",
+        height: viewMode === "grid" ? "100%" : "auto"
       }}
     >
-      <div style={{ display: "flex", alignItems: viewMode === "grid" ? "flex-start" : "center", gap: 16, width: viewMode === "grid" ? "100%" : "auto" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, width: "100%" }}>
         <div style={{ 
-          width: 48, height: 48, borderRadius: 12, background: "var(--bg-muted)", 
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 
+          width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+          background: res.type === 'folder' ? "rgba(245, 158, 11, 0.1)" : "var(--bg-muted)", 
+          color: res.type === 'folder' ? "#F59E0B" : "var(--brand)",
+          display: "flex", alignItems: "center", justifyContent: "center" 
         }}>
-          {res.type === 'folder' && <Folder color="var(--brand)" size={24} />}
-          {res.type === 'link' && <LinkIcon color="#059669" size={24} />}
-          {(res.type === 'pdf' || res.type === 'doc') && <FileText color="#D97706" size={24} />}
-          {res.type === 'sop' && <FileText color="#7C3AED" size={24} />}
+          {res.type === 'folder' ? <Folder size={24} /> : res.type === 'link' ? <LinkIcon size={24} /> : <FileText size={24} />}
         </div>
-        <div>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.3 }}>{res.name}</h3>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginTop: 4 }}>
-            {res.type === 'folder' ? `${res.items} items` : res.size || "External Link"}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {res.name}
+            </h3>
+            <button onClick={() => deleteVaultResource(res.id)} style={{ background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", padding: 4 }}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ textTransform: "uppercase", fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", color: "var(--brand)", background: "var(--brand-glow)", padding: "2px 6px", borderRadius: 4 }}>
+              {res.type}
+            </span>
+            {res.size && <span>• {res.size}</span>}
+            {res.items !== undefined && <span>• {res.items} items</span>}
           </p>
           {viewMode === "grid" && res.description && (
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.5 }}>{res.description}</p>
@@ -74,7 +105,12 @@ export default function VaultPage() {
         </div>
       </div>
       
-      <button style={{ 
+      <button 
+        onClick={() => {
+          if (res.url) window.open(res.url, "_blank");
+          else alert("No URL provided for this resource.");
+        }}
+        style={{ 
         background: viewMode === "grid" ? "var(--bg-elevated)" : "transparent", 
         border: viewMode === "grid" ? "1px solid var(--border)" : "none", 
         color: "var(--text-secondary)", cursor: "pointer", 
@@ -100,39 +136,37 @@ export default function VaultPage() {
               Resource Vault
             </h1>
             <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginTop: "4px", fontWeight: 500 }}>
-              SOPs, Brand Assets & Shared Files
+              SOPs, Brand Kits & Official Docs
             </p>
           </div>
         </div>
-        <button className="glass-panel" style={{
+        <button 
+          onClick={() => setIsCreating(true)}
+          className="glass-panel" style={{
           display: "flex", alignItems: "center", gap: 6,
-          background: "linear-gradient(135deg, #7C3AED, #5B21B6)", color: "white",
+          background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white",
           border: "none", borderRadius: 16, padding: "12px 20px",
           fontSize: 14, fontWeight: 700, cursor: "pointer",
-          boxShadow: "0 8px 20px rgba(124, 58, 237, 0.3)",
+          boxShadow: "0 8px 20px rgba(79, 70, 229, 0.3)",
           transition: "transform 0.2s"
         }}>
-          <Plus size={18} /> Upload File
+          <Plus size={18} /> Upload Resource
         </button>
       </header>
 
       {/* Toolbar */}
-      <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-        <div style={{ position: "relative", flex: "1 1 300px", maxWidth: 400 }}>
+      <div className="fade-up" style={{ display: "flex", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 250, position: "relative" }}>
           <Search size={18} color="var(--text-muted)" style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }} />
           <input 
             type="text" 
             placeholder="Search vault..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ 
-              width: "100%", padding: "14px 16px 14px 44px", borderRadius: 16, 
-              border: "1px solid var(--border-strong)", background: "rgba(255,255,255,0.6)",
-              fontSize: 15, fontWeight: 600, color: "var(--text-primary)", outline: "none"
-            }} 
+            style={{ width: "100%", padding: "12px 16px 12px 44px", borderRadius: 14, border: "1.5px solid var(--border-strong)", background: "white", fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}
           />
         </div>
-        <div style={{ display: "flex", gap: 8, background: "var(--bg-elevated)", padding: 6, borderRadius: 16, border: "1px solid var(--border)" }}>
+        <div className="glass-panel" style={{ display: "flex", padding: 6, borderRadius: 14, background: "white", border: "1.5px solid var(--border-strong)" }}>
           <button onClick={() => setViewMode("grid")} style={{ padding: 8, borderRadius: 10, border: "none", cursor: "pointer", background: viewMode === "grid" ? "var(--bg-muted)" : "transparent", color: viewMode === "grid" ? "var(--text-primary)" : "var(--text-muted)", transition: "all 0.2s" }}>
             <LayoutGrid size={18} />
           </button>
@@ -142,54 +176,98 @@ export default function VaultPage() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {filteredResources.length === 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)", fontSize: 15, fontWeight: 500 }}
-          >
-            No files found for &quot;{searchQuery}&quot;.
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-        {sops.length > 0 && (
-          <section className="fade-up">
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 24, background: "#7C3AED", borderRadius: 4 }} />
-              SOP Library
-            </h2>
-            <div style={{ display: "grid", gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr", gap: 16 }}>
-              <AnimatePresence>{sops.map(renderResourceCard)}</AnimatePresence>
-            </div>
-          </section>
-        )}
-
         {folders.length > 0 && (
-          <section className="fade-up">
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 24, background: "var(--brand)", borderRadius: 4 }} />
-              Folders & Drives
+          <section>
+            <h2 className="outfit-font fade-up" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+              <Folder size={20} color="var(--brand)" /> Kits & Drives
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr", gap: 16 }}>
-              <AnimatePresence>{folders.map(renderResourceCard)}</AnimatePresence>
+              <AnimatePresence mode="popLayout">
+                {folders.map(renderResourceCard)}
+              </AnimatePresence>
             </div>
           </section>
         )}
 
         {documents.length > 0 && (
-          <section className="fade-up">
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 8, height: 24, background: "#D97706", borderRadius: 4 }} />
-              Documents
+          <section>
+            <h2 className="outfit-font fade-up" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+              <FileText size={20} color="#10B981" /> Official Documents
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr", gap: 16 }}>
-              <AnimatePresence>{documents.map(renderResourceCard)}</AnimatePresence>
+              <AnimatePresence mode="popLayout">
+                {documents.map(renderResourceCard)}
+              </AnimatePresence>
+            </div>
+          </section>
+        )}
+
+        {sops.length > 0 && (
+          <section>
+            <h2 className="outfit-font fade-up" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+              <FileText size={20} color="#F59E0B" /> SOPs & Guidelines
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr", gap: 16 }}>
+              <AnimatePresence mode="popLayout">
+                {sops.map(renderResourceCard)}
+              </AnimatePresence>
             </div>
           </section>
         )}
       </div>
+
+      {/* Create Modal */}
+      {isCreating && (
+        <div className="cmdk-overlay" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setIsCreating(false)}>
+          <div className="glass-panel" style={{ width: 450, padding: 24, background: "white" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 className="outfit-font" style={{ fontSize: 20, fontWeight: 800 }}>Upload Resource</h2>
+              <button onClick={() => setIsCreating(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Resource Name</label>
+                <input required value={newResource.name} onChange={e => setNewResource({...newResource, name: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="e.g. Logo Kit" />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Type</label>
+                  <select required value={newResource.type} onChange={e => setNewResource({...newResource, type: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                    <option value="link">Link</option>
+                    <option value="folder">Folder</option>
+                    <option value="pdf">PDF</option>
+                    <option value="doc">Doc</option>
+                    <option value="sop">SOP</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Category</label>
+                  <select required value={newResource.category} onChange={e => setNewResource({...newResource, category: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                    <option value="links">Links/Drives</option>
+                    <option value="documents">Documents</option>
+                    <option value="sops">SOPs</option>
+                    <option value="assets">Assets</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>URL / File Link</label>
+                <input required type="url" value={newResource.url} onChange={e => setNewResource({...newResource, url: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="https://..." />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Description (Optional)</label>
+                <textarea value={newResource.description} onChange={e => setNewResource({...newResource, description: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14, minHeight: 60 }} placeholder="Brief info..." />
+              </div>
+              
+              <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 10, padding: 14, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}>
+                {submitting ? "Uploading..." : "Save Resource"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

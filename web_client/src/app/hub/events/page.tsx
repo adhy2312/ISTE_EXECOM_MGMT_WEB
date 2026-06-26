@@ -2,30 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { Calendar, ChevronLeft, Plus, MapPin, Users, Clock, CheckSquare, MoreVertical, LayoutList } from "lucide-react";
+import { Calendar, ChevronLeft, Plus, MapPin, Users, Clock, CheckSquare, MoreVertical, LayoutList, X, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-const initialEvents = [
-  { id: 1, title: "Tech Symposia 2026", date: "2026-06-28T10:00:00", location: "Main Auditorium", attendees: 120, status: "upcoming", 
-    checklists: [
-      { id: 'c1', label: "Book Auditorium", done: true },
-      { id: 'c2', label: "Confirm Chief Guest", done: true },
-      { id: 'c3', label: "Order Refreshments", done: false },
-      { id: 'c4', label: "Print Banners", done: false }
-    ]
-  },
-  { id: 2, title: "AI Workshop Series", date: "2026-07-12T14:00:00", location: "CS Lab 3", attendees: 45, status: "planning",
-    checklists: [
-      { id: 'c5', label: "Prepare VM instances", done: false },
-      { id: 'c6', label: "Send out syllabus", done: false }
-    ]
-  },
-];
+import { useHubStore } from "@/store/hub";
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 export default function EventsOpsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [events, setEvents] = useState(initialEvents);
+  
+  const { events, fetchEvents, addEvent, deleteEvent } = useHubStore();
+  const [isCreating, setIsCreating] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    date: "",
+    location: "",
+    attendees: 0,
+    status: "planning" as const
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  // Initialize
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -35,24 +35,34 @@ export default function EventsOpsPage() {
         { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out" }
       );
     }
-  }, []);
+  }, [events]);
 
-  const toggleChecklist = (eventId: number, checkId: string) => {
-    setEvents(events.map(evt => {
-      if (evt.id === eventId) {
-        return {
-          ...evt,
-          checklists: evt.checklists.map(c => c.id === checkId ? { ...c, done: !c.done } : c)
-        };
-      }
-      return evt;
-    }));
+  const toggleChecklist = (eventId: string, checkId: string) => {
+    // Note: Since checklists aren't in the DB schema for now we just handle local or ignore.
+    // Full implementation would update Firestore. For now, events don't have checklists on creation.
   };
 
   const getDaysUntil = (dateStr: string) => {
     const diff = new Date(dateStr).getTime() - new Date().getTime();
     const days = Math.ceil(diff / (1000 * 3600 * 24));
     return days > 0 ? days : 0;
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addEvent({
+        ...newEvent,
+        checklists: []
+      });
+      setIsCreating(false);
+      setNewEvent({ title: "", date: "", location: "", attendees: 0, status: "planning" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -71,7 +81,9 @@ export default function EventsOpsPage() {
             </p>
           </div>
         </div>
-        <button className="glass-panel" style={{
+        <button 
+          onClick={() => setIsCreating(true)}
+          className="glass-panel" style={{
           display: "flex", alignItems: "center", gap: 6,
           background: "linear-gradient(135deg, #2563EB, #1D4ED8)", color: "white",
           border: "none", borderRadius: 16, padding: "12px 20px",
@@ -83,17 +95,26 @@ export default function EventsOpsPage() {
         </button>
       </header>
 
+      {events.length === 0 && (
+        <div className="fade-up" style={{ textAlign: "center", padding: 60, color: "var(--text-muted)", fontSize: 15, fontWeight: 600 }}>
+          No events found. Schedule one!
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <AnimatePresence>
           {events.map((evt) => {
             const dateObj = new Date(evt.date);
             const daysLeft = getDaysUntil(evt.date);
-            const doneCount = evt.checklists.filter(c => c.done).length;
-            const progress = (doneCount / evt.checklists.length) * 100;
+            const doneCount = evt.checklists?.filter(c => c.done).length || 0;
+            const progress = evt.checklists?.length ? (doneCount / evt.checklists.length) * 100 : 0;
 
             return (
               <motion.div 
                 layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 key={evt.id} 
                 className="glass-panel fade-up" 
                 style={{ border: "1px solid var(--border)", overflow: "hidden", display: "flex", flexDirection: "column" }}
@@ -114,9 +135,21 @@ export default function EventsOpsPage() {
                       </div>
                       <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)" }}>{evt.title}</h3>
                     </div>
-                    <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }}>
-                      <MoreVertical size={20} />
-                    </button>
+
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }}>
+                          <MoreVertical size={20} />
+                        </button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content className="dropdown-content glass-panel" style={{ minWidth: 150, zIndex: 100, padding: 8 }}>
+                          <DropdownMenu.Item className="dropdown-item" onSelect={() => deleteEvent(evt.id)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "var(--error)", fontSize: 13, fontWeight: 600 }}>
+                            <Trash2 size={14} /> Delete Event
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
                   </div>
                   
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginTop: 16 }}>
@@ -136,53 +169,101 @@ export default function EventsOpsPage() {
                 </div>
 
                 {/* Event Checklists */}
-                <div style={{ padding: "20px 24px", background: "rgba(255,255,255,0.3)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <h4 style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
-                      <LayoutList size={18} color="var(--brand)" /> Planning Checklist
-                    </h4>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
-                      {doneCount} / {evt.checklists.length}
+                {evt.checklists && evt.checklists.length > 0 && (
+                  <div style={{ padding: "20px 24px", background: "rgba(255,255,255,0.3)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <h4 style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+                        <LayoutList size={18} color="var(--brand)" /> Planning Checklist
+                      </h4>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
+                        {doneCount} / {evt.checklists.length}
+                      </div>
+                    </div>
+
+                    <div style={{ height: 6, background: "var(--bg-muted)", borderRadius: 3, marginBottom: 20, overflow: "hidden" }}>
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.5 }}
+                        style={{ height: "100%", background: progress === 100 ? "#059669" : "var(--brand)", borderRadius: 3 }}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 12 }}>
+                      {evt.checklists.map(check => (
+                        <button 
+                          key={check.id}
+                          onClick={() => toggleChecklist(evt.id, check.id)}
+                          style={{ 
+                            display: "flex", alignItems: "center", gap: 12, padding: "12px", 
+                            background: check.done ? "rgba(5, 150, 105, 0.05)" : "var(--bg-elevated)", 
+                            border: check.done ? "1px solid rgba(5, 150, 105, 0.2)" : "1px solid var(--border)", 
+                            borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "all 0.2s"
+                          }}
+                        >
+                          <div style={{ color: check.done ? "#059669" : "var(--text-muted)" }}>
+                            {check.done ? <CheckSquare size={18} /> : <div style={{ width: 16, height: 16, borderRadius: 4, border: "2px solid var(--text-muted)" }} />}
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: check.done ? "var(--text-secondary)" : "var(--text-primary)", textDecoration: check.done ? "line-through" : "none" }}>
+                            {check.label}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div style={{ height: 6, background: "var(--bg-muted)", borderRadius: 3, marginBottom: 20, overflow: "hidden" }}>
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.5 }}
-                      style={{ height: "100%", background: progress === 100 ? "#059669" : "var(--brand)", borderRadius: 3 }}
-                    />
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 12 }}>
-                    {evt.checklists.map(check => (
-                      <button 
-                        key={check.id}
-                        onClick={() => toggleChecklist(evt.id, check.id)}
-                        style={{ 
-                          display: "flex", alignItems: "center", gap: 12, padding: "12px", 
-                          background: check.done ? "rgba(5, 150, 105, 0.05)" : "var(--bg-elevated)", 
-                          border: check.done ? "1px solid rgba(5, 150, 105, 0.2)" : "1px solid var(--border)", 
-                          borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "all 0.2s"
-                        }}
-                      >
-                        <div style={{ color: check.done ? "#059669" : "var(--text-muted)" }}>
-                          {check.done ? <CheckSquare size={18} /> : <div style={{ width: 16, height: 16, borderRadius: 4, border: "2px solid var(--text-muted)" }} />}
-                        </div>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: check.done ? "var(--text-secondary)" : "var(--text-primary)", textDecoration: check.done ? "line-through" : "none" }}>
-                          {check.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                )}
               </motion.div>
             );
           })}
         </AnimatePresence>
       </div>
+
+      {/* Create Modal */}
+      {isCreating && (
+        <div className="cmdk-overlay" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setIsCreating(false)}>
+          <div className="glass-panel" style={{ width: 450, padding: 24, background: "white" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 className="outfit-font" style={{ fontSize: 20, fontWeight: 800 }}>New Event</h2>
+              <button onClick={() => setIsCreating(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Event Title</label>
+                <input required value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="e.g. Tech Symposia" />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Date & Time</label>
+                  <input required type="datetime-local" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Status</label>
+                  <select required value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                    <option value="planning">Planning</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Location</label>
+                  <input required value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} placeholder="e.g. Auditorium" />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Attendees Cap</label>
+                  <input required type="number" value={newEvent.attendees} onChange={e => setNewEvent({...newEvent, attendees: Number(e.target.value)})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }} />
+                </div>
+              </div>
+              
+              <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 10, padding: 14, background: "linear-gradient(135deg, var(--brand), #4338CA)", color: "white", border: "none", borderRadius: 12, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}>
+                {submitting ? "Saving..." : "Create Event"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
