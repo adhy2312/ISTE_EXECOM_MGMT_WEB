@@ -11,10 +11,40 @@ import {
   User, Edit3, Save, X, Plus, ExternalLink,
   CheckCircle2, Clock, XCircle, Zap, Star,
   Target, TrendingUp, ShieldCheck, Calendar,
-  Camera, QrCode,
+  Camera, QrCode, Lock, Award,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
+// ── Badge System ──────────────────────────────────────────────────────────────
+const BADGE_DEFINITIONS = [
+  { id: "first_xp", icon: "⚡", label: "First Spark",        desc: "Earned your first XP",              threshold: 1,   color: "#D97706" },
+  { id: "rising",   icon: "🌟", label: "Rising Star",        desc: "Accumulated 50 XP",                 threshold: 50,  color: "#F59E0B" },
+  { id: "active",   icon: "🔥", label: "Active Contributor", desc: "Accumulated 150 XP",                threshold: 150, color: "#BE185D" },
+  { id: "power",    icon: "💎", label: "Power Exec",         desc: "Accumulated 300 XP",                threshold: 300, color: "#7C3AED" },
+  { id: "legend",   icon: "👑", label: "Chapter Legend",     desc: "Accumulated 500 XP",                threshold: 500, color: "#059669" },
+  { id: "requests", icon: "📋", label: "Go-Getter",          desc: "Submitted 5+ requests",             threshold: 5,   color: "#2563EB", mode: "count" as const },
+];
+
+function BadgeCard({ badge, earned }: { badge: typeof BADGE_DEFINITIONS[0]; earned: boolean }) {
+  return (
+    <div style={{
+      padding: "18px 14px", borderRadius: 20, textAlign: "center",
+      background: earned ? `linear-gradient(135deg, ${badge.color}18, ${badge.color}08)` : "rgba(0,0,0,0.03)",
+      border: `1.5px solid ${earned ? badge.color + "40" : "var(--border)"}`,
+      opacity: earned ? 1 : 0.5, transition: "all 0.3s", position: "relative", overflow: "hidden",
+    }}>
+      <div style={{ fontSize: 32, marginBottom: 10, filter: earned ? "none" : "grayscale(100%)" }}>
+        {earned ? badge.icon : "🔒"}
+      </div>
+      {!earned && (
+        <Lock size={12} color="var(--text-muted)" style={{ position: "absolute", top: 10, right: 10 }} />
+      )}
+      <div style={{ fontSize: 12, fontWeight: 800, color: earned ? badge.color : "var(--text-muted)", marginBottom: 4 }}>{badge.label}</div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, lineHeight: 1.4 }}>{badge.desc}</div>
+    </div>
+  );
+}
 
 // ── Score Ring Component ───────────────────────────────────────────────────
 function ScoreRing({ value, max, color, label, size = 76 }: {
@@ -267,7 +297,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Quick Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20, position: "relative", zIndex: 1 }}>
+        <div className="responsive-grid-3" style={{ marginTop: 20, position: "relative", zIndex: 1 }}>
           {[
             { label: "Core XP", value: user.corePoints, icon: Zap, color: "#D97706" },
             { label: "XP Approved", value: totalApproved, icon: TrendingUp, color: "var(--success)" },
@@ -292,7 +322,7 @@ export default function ProfilePage() {
             <User size={18} color="var(--brand)" /> Edit Profile
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="responsive-grid-2">
               <div>
                 <label style={lSt}>Full Name</label>
                 <input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} style={inputSt} placeholder="Your full name" />
@@ -402,7 +432,7 @@ export default function ProfilePage() {
         {/* Submit Form */}
         {showContribForm && (
           <form onSubmit={handleContribSubmit} style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20, padding: 16, background: "var(--bg-muted)", borderRadius: 16, border: "1px solid var(--border)" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="responsive-grid-2" style={{ gap: 14 }}>
               <div>
                 <label style={lSt}>Date</label>
                 <input type="date" value={contribForm.date} onChange={e => setContribForm(f => ({ ...f, date: e.target.value }))} style={inputSt} required />
@@ -433,7 +463,7 @@ export default function ProfilePage() {
               const sc = statusConfig[c.status];
               return (
                 <div key={c.id} style={{ padding: "14px 16px", background: "rgba(255,255,255,0.5)", borderRadius: 14, border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                  <div className="responsive-flex-row-between" style={{ alignItems: "flex-start", gap: 10 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4 }}>{c.task}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
@@ -488,6 +518,22 @@ export default function ProfilePage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── Badges & Recognition ─────────────────────────────────────────────── */}
+      <div className="glass-panel fade-up" style={{ padding: "24px" }}>
+        <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <Award size={18} color="#F59E0B" /> Badges & Recognition
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, marginBottom: 20 }}>Earn badges by contributing and accumulating XP.</p>
+        <div className="responsive-grid-3">
+          {BADGE_DEFINITIONS.map(badge => {
+            const earned = badge.mode === "count"
+              ? requests.length >= badge.threshold
+              : totalApproved >= badge.threshold;
+            return <BadgeCard key={badge.id} badge={badge} earned={earned} />;
+          })}
+        </div>
       </div>
     </div>
   );

@@ -92,6 +92,13 @@ service cloud.firestore {
       allow delete: if false; // Contribution log is permanent
     }
 
+    // ── Notifications ───────────────────────────────────────────────────────
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated(); // Allow users to add themselves to readBy
+      allow create, delete: if isChapterAdmin();
+    }
+
     // ── Allowed Users Whitelist ───────────────────────────────────────────
     match /allowedUsers/{email} {
       allow read: if isAuthenticated();

@@ -11,10 +11,9 @@ import {
   browserSessionPersistence,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { ExecomMember, UserRole, UserStatus } from '@/types/models';
-
-
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface AuthState {
   user: ExecomMember | null;
@@ -25,6 +24,7 @@ interface AuthState {
   loginWithGoogle: (rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   initAuth: () => () => void;
+  updateProfilePicture: (file: File) => Promise<string | null>;
 }
 
 /** Look up the allowedUsers whitelist — returns the entry or null if blocked */
@@ -155,5 +155,30 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await signOut(auth);
     set({ user: null, firebaseUser: null, error: null });
+  },
+
+  updateProfilePicture: async (file: File) => {
+    const state = useAuthStore.getState();
+    if (!state.firebaseUser || !state.user) throw new Error("Not authenticated");
+    
+    set({ isLoading: true, error: null });
+    try {
+      const fileRef = ref(storage, `profile_pictures/${state.firebaseUser.uid}_${Date.now()}`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      
+      // Update firestore document
+      await setDoc(doc(db, 'users', state.firebaseUser.uid), { photoURL: url }, { merge: true });
+      
+      // Update local state
+      set({ 
+        user: { ...state.user, photoURL: url },
+        isLoading: false 
+      });
+      return url;
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false });
+      return null;
+    }
   },
 }));

@@ -8,6 +8,7 @@ import { useTasksStore } from "@/store/tasks";
 import { Calendar, Activity, CheckCircle, ChevronRight, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { UserRole } from "@/types/models";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuthStore();
@@ -37,8 +38,15 @@ export default function HomePage() {
 
   if (authLoading || (user && (dashLoading || tasksLoading))) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <div style={{ border: "3px solid var(--border)", borderTopColor: "var(--brand)", borderRadius: "50%", width: "32px", height: "32px", animation: "spin 1s linear infinite" }} />
+      <div style={{ padding: "24px 20px", maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+        <Skeleton height={60} width="60%" borderRadius={16} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <Skeleton height={100} borderRadius={20} />
+          <Skeleton height={100} borderRadius={20} />
+        </div>
+        <Skeleton height={120} borderRadius={20} />
+        <Skeleton height={200} borderRadius={20} />
+        <Skeleton height={150} borderRadius={20} />
       </div>
     );
   }
@@ -114,20 +122,23 @@ export default function HomePage() {
   const pendingTasks = tasks.filter(t => t.state !== "completed");
 
   return (
-    <div ref={containerRef} style={{ padding: "24px 20px", paddingBottom: "100px" }}>
+    <div ref={containerRef} style={{ padding: "24px 20px", paddingBottom: "100px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Greeting Header */}
-      <header className="stagger-in" style={{ marginBottom: "2rem" }}>
-        <h1 className="outfit-font text-gradient" style={{ fontSize: 32, fontWeight: 800 }}>
-          Good morning, {user.fullName.split(" ")[0]}
-        </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: 15, marginTop: 4 }}>
-          Here&apos;s your society overview for today.
-        </p>
+      <header className="stagger-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <h1 className="outfit-font text-gradient" style={{ fontSize: 32, fontWeight: 800 }}>
+            Good morning, {user.fullName.split(" ")[0]}
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: 15, marginTop: 4, fontWeight: 500 }}>
+            Here&apos;s your society overview for today.
+          </p>
+        </div>
       </header>
 
-      {/* Quick Stats Cards */}
-      <div className="stagger-in" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: "2rem" }}>
-        <div className="glass-panel" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Quick Stats Grid */}
+      <div className="stagger-in responsive-grid-2">
+        <div className="glass-panel" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "var(--brand-glow)", borderRadius: "50%", filter: "blur(30px)" }} />
           <div style={{ color: "var(--brand)" }}>
             <CheckCircle size={24} />
           </div>
@@ -137,8 +148,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ color: "var(--accent)" }}>
+        <div className="glass-panel" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(245, 158, 11, 0.15)", borderRadius: "50%", filter: "blur(30px)" }} />
+          <div style={{ color: "#F59E0B" }}>
             <Activity size={24} />
           </div>
           <div>
@@ -149,105 +161,106 @@ export default function HomePage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="stagger-in" style={{ marginBottom: "2.5rem" }}>
+      <div className="stagger-in">
         {isAdmin ? (
-          <Link href="/executive" style={{
+          <Link href="/executive" className="glass-panel" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "linear-gradient(135deg, rgba(67, 56, 202, 0.1), rgba(67, 56, 202, 0.05))",
-            border: "1px solid rgba(67, 56, 202, 0.3)", borderRadius: 16, padding: "20px",
-            textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
+            padding: "20px", textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
           }}>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#4338CA", display: "flex", alignItems: "center", gap: 8 }}>
-                <ShieldCheck size={18} /> Point Monitor & Approvals
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+                <ShieldCheck size={18} color="var(--brand)" /> Point Monitor & Approvals
               </h3>
               <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
                 Review and approve member contributions.
               </p>
             </div>
-            <ChevronRight color="#4338CA" />
+            <ChevronRight color="var(--text-muted)" />
           </Link>
         ) : (
-          <Link href="/points" style={{
+          <Link href="/points" className="glass-panel" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))",
-            border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 16, padding: "20px",
-            textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
+            padding: "20px", textDecoration: "none", color: "var(--text-primary)", transition: "transform 0.2s"
           }}>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#D97706", display: "flex", alignItems: "center", gap: 8 }}>
-                <Activity size={18} /> Submit Point Request
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+                <Activity size={18} color="#D97706" /> Submit Point Request
               </h3>
               <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
                 Log your contributions and earn Core XP.
               </p>
             </div>
-            <ChevronRight color="#D97706" />
+            <ChevronRight color="var(--text-muted)" />
           </Link>
         )}
       </div>
 
-      {/* Upcoming Events */}
-      <section className="stagger-in" style={{ marginBottom: "2.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 700 }}>Upcoming Events</h2>
-          <Link href="/hub" style={{ color: "var(--brand)", fontSize: 13, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center" }}>
-            View Hub <ChevronRight size={16} />
-          </Link>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {events.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 14 }}>No upcoming events</div>
-          ) : events.map((evt) => {
-            const d = new Date(evt.date);
-            return (
-              <div key={evt.id} className="glass-panel" style={{ padding: 16, display: "flex", gap: 16, alignItems: "center" }}>
-                <div style={{ 
-                  background: "var(--brand-light)", color: "var(--brand)", 
-                  borderRadius: 12, padding: 10, minWidth: 56, textAlign: "center" 
-                }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>{d.toLocaleString('default', { month: 'short' })}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800 }}>{d.getDate()}</div>
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{evt.title}</h3>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-secondary)", fontSize: 13 }}>
-                    <Calendar size={14} /> {evt.location}
+      {/* Two Column Layout for Events & Activity */}
+      <div className="responsive-grid-2">
+        
+        {/* Upcoming Events */}
+        <section className="stagger-in glass-panel" style={{ padding: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800 }}>Upcoming Events</h2>
+            <Link href="/hub" style={{ color: "var(--brand)", fontSize: 13, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center" }}>
+              View All
+            </Link>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {events.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 14 }}>No upcoming events</div>
+            ) : events.map((evt) => {
+              const d = new Date(evt.date);
+              return (
+                <div key={evt.id} style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ 
+                    background: "var(--brand-glow)", color: "var(--brand)", 
+                    borderRadius: 12, padding: "8px 12px", minWidth: 56, textAlign: "center" 
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5 }}>{d.toLocaleString('default', { month: 'short' })}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800 }}>{d.getDate()}</div>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4 }}>{evt.title}</h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-secondary)", fontSize: 13, fontWeight: 500 }}>
+                      <Calendar size={14} /> {evt.location}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
 
-      {/* Recent Activity */}
-      <section className="stagger-in">
-        <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Recent Activity</h2>
-        <div className="glass-panel" style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {activities.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 10, color: "var(--text-muted)", fontSize: 14 }}>No recent activity</div>
-          ) : activities.map((act, idx) => (
-            <div key={act.id} style={{ 
-              display: "flex", gap: 12, alignItems: "flex-start",
-              borderBottom: idx === activities.length - 1 ? "none" : "1px solid var(--border)",
-              paddingBottom: idx === activities.length - 1 ? 0 : 16
-            }}>
-              <div style={{ 
-                width: 8, height: 8, borderRadius: "50%", 
-                backgroundColor: "var(--accent)", marginTop: 6,
-                boxShadow: "0 0 8px var(--accent-glow)"
-              }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, lineHeight: 1.4, color: "var(--text-primary)" }}>
-                  <span style={{ fontWeight: 600 }}>{act.user}</span> {act.action}
-                </p>
-                <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>{act.time}</span>
+        {/* Recent Activity */}
+        <section className="stagger-in glass-panel" style={{ padding: 20 }}>
+          <h2 className="outfit-font" style={{ fontSize: 18, fontWeight: 800, marginBottom: 20 }}>Recent Activity</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {activities.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)", fontSize: 14 }}>No recent activity</div>
+            ) : activities.map((act, idx) => (
+              <div key={act.id} style={{ 
+                display: "flex", gap: 12, alignItems: "flex-start",
+                borderBottom: idx === activities.length - 1 ? "none" : "1px solid var(--border)",
+                paddingBottom: idx === activities.length - 1 ? 0 : 16
+              }}>
+                <div style={{ 
+                  width: 8, height: 8, borderRadius: "50%", 
+                  backgroundColor: "var(--brand)", marginTop: 6,
+                  boxShadow: "0 0 8px var(--brand-glow)"
+                }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 14, lineHeight: 1.4, color: "var(--text-primary)" }}>
+                    <span style={{ fontWeight: 700 }}>{act.user}</span> {act.action}
+                  </p>
+                  <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>{act.time}</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 }

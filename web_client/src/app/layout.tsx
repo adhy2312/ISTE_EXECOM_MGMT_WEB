@@ -32,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Toaster position="top-center" richColors theme="light" />
         <CommandMenu />
         <div className="animated-bg" />
@@ -42,6 +42,9 @@ export default function RootLayout({
           <div className="app-container">
             <main className="main-content">
               {children}
+              <div style={{ textAlign: "center", padding: "20px 0 40px", fontSize: "11px", color: "var(--text-muted)", opacity: 0.5, fontWeight: 500, letterSpacing: "0.05em" }}>
+                developed and tested by Adhy
+              </div>
             </main>
             <Navigation />
           </div>

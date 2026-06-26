@@ -100,6 +100,9 @@ export function CommandMenu() {
                   <Command.Item onSelect={() => runCommand(() => router.push("/executive"))}>
                     <ShieldCheck size={16} /> Executive Panel
                   </Command.Item>
+                  <Command.Item onSelect={() => runCommand(() => router.push("/directory"))}>
+                    <UserCog size={16} /> Executive Directory
+                  </Command.Item>
                   <Command.Item onSelect={() => runCommand(() => router.push("/observatory"))}>
                     <Database size={16} /> Faculty Observatory
                   </Command.Item>

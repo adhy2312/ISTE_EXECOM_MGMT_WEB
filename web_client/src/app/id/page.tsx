@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/store/auth";
 import gsap from "gsap";
-import { Grid, Share2, Verified } from "lucide-react";
+import { Grid, Share2, Verified, Download, Camera, Loader2 } from "lucide-react";
 import QRCode from "react-qr-code";
+import { toPng } from "html-to-image";
+import { toast } from "sonner";
 
 export default function IDPage() {
-  const { user } = useAuthStore();
+  const { user, updateProfilePicture } = useAuthStore();
   const cardRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (cardRef.current) {
@@ -36,8 +40,39 @@ export default function IDPage() {
         console.error("Error sharing:", err);
       }
     } else {
-      alert("Sharing not supported on this browser.");
+      toast.error("Sharing not supported on this browser.");
     }
+  };
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+    try {
+      const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 3 });
+      const link = document.createElement("a");
+      link.download = `iste-id-${user.fullName.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Digital ID saved as image!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download ID card");
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be smaller than 2MB");
+      return;
+    }
+    
+    setIsUploading(true);
+    const url = await updateProfilePicture(file);
+    setIsUploading(false);
+    
+    if (url) toast.success("Profile picture updated!");
+    else toast.error("Failed to upload profile picture.");
   };
 
   return (
@@ -49,15 +84,28 @@ export default function IDPage() {
           </div>
           Digital ID
         </h1>
-        <button 
-          onClick={handleShare}
-          style={{ 
-            background: "var(--bg-elevated)", border: "1px solid var(--border)", color: "var(--text-secondary)", 
-            cursor: "pointer", padding: "10px", borderRadius: "12px", boxShadow: "var(--shadow-sm)"
-          }}
-        >
-          <Share2 size={18} />
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button 
+            onClick={handleDownload}
+            title="Save as Image"
+            style={{ 
+              background: "var(--bg-elevated)", border: "1px solid var(--border)", color: "var(--text-secondary)", 
+              cursor: "pointer", padding: "10px", borderRadius: "12px", boxShadow: "var(--shadow-sm)"
+            }}
+          >
+            <Download size={18} />
+          </button>
+          <button 
+            onClick={handleShare}
+            title="Share"
+            style={{ 
+              background: "var(--bg-elevated)", border: "1px solid var(--border)", color: "var(--text-secondary)", 
+              cursor: "pointer", padding: "10px", borderRadius: "12px", boxShadow: "var(--shadow-sm)"
+            }}
+          >
+            <Share2 size={18} />
+          </button>
+        </div>
       </header>
 
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -85,18 +133,44 @@ export default function IDPage() {
           {/* Body */}
           <div style={{ padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
             {/* Profile Picture */}
-            <div style={{
-              width: 100, height: 100, borderRadius: "50%",
-              background: user.photoURL ? `url(${user.photoURL}) center/cover` : "linear-gradient(135deg, var(--brand), #4338CA)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 36, fontWeight: 800, color: "white",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-              border: "4px solid white",
-              marginTop: "-60px", // Float above header
-              marginBottom: "20px",
-              position: "relative", zIndex: 2
-            }}>
+            <div 
+              style={{
+                width: 100, height: 100, borderRadius: "50%",
+                background: user.photoURL ? `url(${user.photoURL}) center/cover` : "linear-gradient(135deg, var(--brand), #4338CA)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 36, fontWeight: 800, color: "white",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                border: "4px solid white",
+                marginTop: "-60px", // Float above header
+                marginBottom: "20px",
+                position: "relative", zIndex: 2,
+                cursor: "pointer",
+                overflow: "hidden"
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to update profile picture"
+            >
               {!user.photoURL && user.fullName.charAt(0).toUpperCase()}
+              
+              {/* Hover / Loading Overlay */}
+              <div style={{
+                position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: isUploading ? 1 : 0, transition: "opacity 0.2s",
+                color: "white"
+              }}
+              onMouseEnter={(e) => { if (!isUploading) e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { if (!isUploading) e.currentTarget.style.opacity = "0"; }}
+              >
+                {isUploading ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+              </div>
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                style={{ display: "none" }} 
+                onChange={handleFileChange}
+              />
             </div>
 
             <div style={{ 

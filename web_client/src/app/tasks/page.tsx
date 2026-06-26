@@ -1,45 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTasksStore } from "@/store/tasks";
 import { TaskState, TaskPriority } from "@/types/models";
-import gsap from "gsap";
-import { CheckSquare, Clock, AlertCircle, PlayCircle, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckSquare, Clock, AlertCircle, PlayCircle, CheckCircle2, MoreHorizontal, ArrowRight, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
-export default function TasksPage() {
-  const { tasks, isLoading, fetchTasks } = useTasksStore();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<TaskState | 'all'>('all');
+const COLUMNS = [
+  { id: TaskState.pending, label: "To Do", icon: CheckSquare, color: "var(--text-secondary)", bg: "var(--bg-muted)" },
+  { id: TaskState.inProgress, label: "In Progress", icon: PlayCircle, color: "#2563EB", bg: "rgba(37, 99, 235, 0.1)" },
+  { id: TaskState.underReview, label: "In Review", icon: AlertCircle, color: "#D97706", bg: "rgba(217, 119, 6, 0.1)" },
+  { id: TaskState.completed, label: "Completed", icon: CheckCircle2, color: "#059669", bg: "rgba(5, 150, 105, 0.1)" },
+];
+
+export default function KanbanPage() {
+  const { tasks, isLoading, fetchTasks, updateTaskState } = useTasksStore();
+  const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
-
-  useEffect(() => {
-    if (!isLoading && tasks.length > 0 && containerRef.current) {
-      const taskCards = containerRef.current.querySelectorAll(".task-card");
-      gsap.fromTo(
-        taskCards,
-        { y: 20, opacity: 0, scale: 0.98 },
-        {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 0.4,
-          stagger: 0.05,
-          ease: "power2.out",
-        }
-      );
-    }
-  }, [isLoading, tasks, activeTab]);
-
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <div style={{ border: "3px solid var(--border)", borderTopColor: "var(--brand)", borderRadius: "50%", width: "32px", height: "32px", animation: "spin 1s linear infinite" }} />
-      </div>
-    );
-  }
 
   const getPriorityColor = (p: TaskPriority) => {
     switch (p) {
@@ -50,105 +32,168 @@ export default function TasksPage() {
     }
   };
 
-  const getStateBadge = (s: TaskState) => {
-    switch (s) {
-      case TaskState.completed: return { label: "Done", color: "#059669", bg: "rgba(5, 150, 105, 0.1)", icon: <CheckCircle2 size={12} /> };
-      case TaskState.inProgress: return { label: "Doing", color: "#2563EB", bg: "rgba(37, 99, 235, 0.1)", icon: <PlayCircle size={12} /> };
-      case TaskState.underReview: return { label: "Review", color: "#D97706", bg: "rgba(217, 119, 6, 0.1)", icon: <AlertCircle size={12} /> };
-      default: return { label: "Todo", color: "var(--text-secondary)", bg: "var(--bg-muted)", icon: <CheckSquare size={12} /> };
-    }
+  const getNextState = (current: TaskState): TaskState | null => {
+    const idx = COLUMNS.findIndex(c => c.id === current);
+    return idx < COLUMNS.length - 1 ? COLUMNS[idx + 1].id : null;
   };
 
-  const filteredTasks = activeTab === 'all' ? tasks : tasks.filter(t => t.state === activeTab);
+  const getPrevState = (current: TaskState): TaskState | null => {
+    const idx = COLUMNS.findIndex(c => c.id === current);
+    return idx > 0 ? COLUMNS[idx - 1].id : null;
+  };
 
-  const tabs = [
-    { id: 'all', label: 'All' },
-    { id: TaskState.pending, label: 'Todo' },
-    { id: TaskState.inProgress, label: 'Doing' },
-    { id: TaskState.completed, label: 'Done' }
-  ];
+  if (isLoading) {
+    return (
+      <div style={{ padding: "40px 20px 100px", maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
+        <Skeleton height={60} width={300} borderRadius={16} />
+        <div style={{ display: "flex", gap: 24, overflowX: "auto" }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} style={{ minWidth: 320, flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+              <Skeleton height={40} borderRadius={12} />
+              <Skeleton height={150} borderRadius={16} />
+              <Skeleton height={150} borderRadius={16} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div ref={containerRef} style={{ paddingBottom: "100px", padding: "20px 20px 100px", maxWidth: 700, margin: "0 auto" }}>
-      <header style={{ marginBottom: "2rem" }}>
-        <h1 className="outfit-font" style={{ fontSize: "28px", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <CheckSquare color="var(--brand)" size={20} strokeWidth={2.5} />
-          </div>
-          Task Matrix
-        </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "8px", fontWeight: 500 }}>Manage assignments and deadlines</p>
+    <div style={{ padding: "40px 20px 100px", maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", height: "100vh" }}>
+      
+      {/* Header section */}
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
+        <div>
+          <h1 className="outfit-font" style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)", marginBottom: 8 }}>
+            Task Board
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "16px", fontWeight: "500" }}>
+            Manage assignments across the pipeline
+          </p>
+        </div>
       </header>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "12px", marginBottom: "16px", scrollbarWidth: "none" }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as TaskState | 'all')}
-            style={{
-              padding: "10px 18px",
-              borderRadius: "12px",
-              border: activeTab === tab.id ? `1.5px solid var(--brand)` : `1px solid var(--border)`,
-              background: activeTab === tab.id ? 'var(--brand-glow)' : 'var(--bg-elevated)',
-              color: activeTab === tab.id ? 'var(--brand)' : 'var(--text-secondary)',
-              fontWeight: "700",
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.2s",
-              whiteSpace: "nowrap",
-              boxShadow: activeTab === tab.id ? "0 4px 10px rgba(79, 70, 229, 0.1)" : "none"
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {filteredTasks.length === 0 && (
-          <div className="glass-panel" style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-secondary)", border: "1px dashed var(--border-strong)" }}>
-            <CheckCircle2 size={40} style={{ margin: "0 auto 12px", opacity: 0.3 }} strokeWidth={1.5} />
-            <div style={{ fontSize: 16, fontWeight: 600 }}>No tasks in this category</div>
-          </div>
-        )}
-        {filteredTasks.map(task => {
-          const state = getStateBadge(task.state);
-          const priority = getPriorityColor(task.priority);
+      {/* Kanban Board */}
+      <div 
+        ref={boardRef}
+        style={{ 
+          display: "flex", gap: 24, flex: 1, overflowX: "auto", overflowY: "hidden", 
+          paddingBottom: 24, scrollbarWidth: "thin", scrollbarColor: "var(--border) transparent" 
+        }}
+      >
+        {COLUMNS.map((col) => {
+          const columnTasks = tasks.filter(t => t.state === col.id);
+          const ColIcon = col.icon;
+          
           return (
-            <div key={task.id} className="task-card glass-panel" style={{ padding: "20px", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", flex: 1, color: "var(--text-primary)", lineHeight: 1.3 }}>{task.title}</h3>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  padding: "6px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: "800", textTransform: "uppercase",
-                  backgroundColor: state.bg, color: state.color, marginLeft: 16
-                }}>
-                  {state.icon} {state.label}
-                </div>
-              </div>
-              <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginBottom: "20px", lineHeight: 1.6 }}>
-                {task.description}
-              </p>
+            <div key={col.id} style={{ 
+              minWidth: 320, width: 320, flexShrink: 0, 
+              display: "flex", flexDirection: "column", gap: 16,
+              background: "rgba(20, 20, 30, 0.4)", borderRadius: 24, padding: "20px 16px",
+              border: "1px solid var(--border)"
+            }}>
               
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: priority.text, backgroundColor: priority.bg, padding: '6px 12px', borderRadius: '8px' }}>
-                  <AlertCircle size={14} />
-                  <span>{task.priority}</span>
+              {/* Column Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, padding: "0 8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ color: col.color, background: col.bg, padding: 6, borderRadius: 8 }}>
+                    <ColIcon size={16} strokeWidth={2.5} />
+                  </div>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>{col.label}</h2>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)", backgroundColor: 'var(--bg-muted)', padding: '6px 12px', borderRadius: '8px' }}>
-                  <Clock size={14} />
-                  <span>{new Date(task.targetDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                <div style={{ background: "var(--bg-elevated)", color: "var(--text-secondary)", fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 12 }}>
+                  {columnTasks.length}
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div style={{ marginTop: "24px", height: "8px", backgroundColor: "var(--bg-muted)", borderRadius: "4px", overflow: "hidden" }}>
-                <div style={{ 
-                  height: "100%", width: `${task.progressPercentage}%`, 
-                  background: "linear-gradient(90deg, var(--brand), #4338CA)",
-                  borderRadius: "4px", transition: "width 0.4s ease"
-                }} />
+              {/* Tasks List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1, overflowY: "auto", padding: "0 4px" }}>
+                <AnimatePresence>
+                  {columnTasks.map((task) => {
+                    const priority = getPriorityColor(task.priority);
+                    const nextState = getNextState(task.state);
+                    const prevState = getPrevState(task.state);
+
+                    return (
+                      <motion.div
+                        layout
+                        layoutId={task.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        key={task.id} 
+                        className="glass-panel" 
+                        style={{ 
+                          padding: "16px", border: "1px solid var(--border-strong)", 
+                          cursor: "grab", position: "relative",
+                          boxShadow: "var(--shadow-sm)"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: priority.text, backgroundColor: priority.bg, padding: '4px 8px', borderRadius: '6px', fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>
+                            <AlertCircle size={12} />
+                            <span>{task.priority}</span>
+                          </div>
+                          
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger asChild>
+                              <button style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 4 }}>
+                                <MoreHorizontal size={16} />
+                              </button>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Portal>
+                              <DropdownMenu.Content className="dropdown-content glass-panel" style={{ minWidth: 150, zIndex: 100, padding: 8 }}>
+                                {prevState && (
+                                  <DropdownMenu.Item className="dropdown-item" onSelect={() => updateTaskState(task.id, prevState)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "var(--text-secondary)", fontSize: 13, fontWeight: 600 }}>
+                                    <ArrowLeft size={14} /> Move Left
+                                  </DropdownMenu.Item>
+                                )}
+                                {nextState && (
+                                  <DropdownMenu.Item className="dropdown-item" onSelect={() => updateTaskState(task.id, nextState)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 8, color: "var(--text-secondary)", fontSize: 13, fontWeight: 600 }}>
+                                    Move Right <ArrowRight size={14} />
+                                  </DropdownMenu.Item>
+                                )}
+                              </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                          </DropdownMenu.Root>
+                        </div>
+                        
+                        <h3 style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", lineHeight: 1.3, marginBottom: 8 }}>
+                          {task.title}
+                        </h3>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontSize: "12px", fontWeight: "600" }}>
+                            <Clock size={12} />
+                            <span>{new Date(task.targetDeadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand)" }}>
+                            {task.potentialPoints} XP
+                          </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        {task.progressPercentage > 0 && task.progressPercentage < 100 && (
+                          <div style={{ marginTop: "16px", height: "4px", backgroundColor: "var(--bg-muted)", borderRadius: "2px", overflow: "hidden" }}>
+                            <div style={{ 
+                              height: "100%", width: `${task.progressPercentage}%`, 
+                              background: "linear-gradient(90deg, var(--brand), #4338CA)",
+                              borderRadius: "2px"
+                            }} />
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+                
+                {columnTasks.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "30px 10px", color: "var(--text-muted)", fontSize: 13, fontWeight: 500, border: "1px dashed var(--border-strong)", borderRadius: 16, opacity: 0.6 }}>
+                    No tasks here
+                  </div>
+                )}
               </div>
             </div>
           );
