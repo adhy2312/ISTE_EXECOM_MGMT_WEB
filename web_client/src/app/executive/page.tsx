@@ -56,8 +56,6 @@ export default function ExecutivePage() {
   // Builder state
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [builderEditForm, setBuilderEditForm] = useState<Partial<ExecomMember>>({});
-  const [newTeamName, setNewTeamName] = useState("");
-  const [newTeamDesc, setNewTeamDesc] = useState("");
   const [addingMemberToTeam, setAddingMemberToTeam] = useState<string | null>(null);
   const [newMemberForm, setNewMemberForm] = useState({ email: "", fullName: "", role: UserRole.generalMember, designation: "", branchBatch: "", department: "" });
 
@@ -418,20 +416,7 @@ export default function ExecutivePage() {
               </div>
             </div>
 
-            {/* Create Team Form */}
-            <div className="glass-panel fade-up" style={{ padding: "20px", marginBottom: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
-              <input value={newTeamName} onChange={e => setNewTeamName(e.target.value)} placeholder="New Team Name" style={{ flex: 1, ...inputSt }} />
-              <input value={newTeamDesc} onChange={e => setNewTeamDesc(e.target.value)} placeholder="Team Description" style={{ flex: 2, ...inputSt }} />
-              <button 
-                onClick={async () => {
-                  if(!newTeamName) return;
-                  await createTeam(newTeamName, newTeamDesc);
-                  setNewTeamName(""); setNewTeamDesc("");
-                }} 
-                style={{ background: "var(--brand)", color: "white", border: "none", borderRadius: 12, padding: "12px 18px", fontWeight: 700, cursor: "pointer", display: "flex", gap: 6, alignItems: "center" }}>
-                <PlusCircle size={16} /> Add Team
-              </button>
-            </div>
+
 
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {teams.map(team => {
@@ -447,7 +432,6 @@ export default function ExecutivePage() {
                         <h3 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{team.name}</h3>
                         {team.description && <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{team.description}</p>}
                       </div>
-                      <button onClick={() => { if(confirm("Delete team?")) deleteTeam(team.id); }} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer" }}><Trash2 size={18} /></button>
                     </div>
 
                     {/* Team Members List */}
