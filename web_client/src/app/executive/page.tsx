@@ -313,7 +313,7 @@ export default function ExecutivePage() {
                   const isPending = req.status === EnergyPointStatus.pending;
                   return (
                     <div key={req.id} className="glass-panel fade-up" style={{ padding: "24px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div className="mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                             <span style={{
@@ -407,7 +407,7 @@ export default function ExecutivePage() {
         {/* ══════════════════════════════════════════════════════════════ */}
         {activeTab === "builder" && (
           <>
-            <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+            <div className="fade-up mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", gap: 12 }}>
               <div>
                 <h2 className="outfit-font" style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 10 }}>
                   <Users size={24} color="var(--brand)" /> ExeCom Builder
@@ -427,7 +427,7 @@ export default function ExecutivePage() {
 
                 return (
                   <div key={team.id} className="glass-panel fade-up" style={{ padding: 24, background: "rgba(255,255,255,0.7)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16 }}>
+                    <div className="mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16, gap: 12 }}>
                       <div>
                         <h3 className="outfit-font" style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{team.name}</h3>
                         {team.description && <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{team.description}</p>}
@@ -447,7 +447,7 @@ export default function ExecutivePage() {
                           if (isEditing) {
                             return (
                               <div key={u.email} className="glass-panel" style={{ padding: 16, border: "1px solid var(--brand-glow)" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                                <div className="mobile-col" style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: 8 }}>
                                   <span style={{ fontSize: 14, fontWeight: 700 }}>Editing: {u.fullName || u.email}</span>
                                 </div>
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
@@ -542,7 +542,7 @@ export default function ExecutivePage() {
         {activeTab === "access" && (
           <>
             {/* Header */}
-            <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+            <div className="fade-up mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", gap: 12 }}>
               <div>
                 <h2 className="outfit-font" style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 10 }}>
                   <ShieldCheck size={24} color="var(--brand)" /> Access Control
@@ -673,7 +673,7 @@ export default function ExecutivePage() {
                         </div>
                       ) : (
                         /* ── Display Row ── */
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                        <div className="mobile-wrap" style={{ display: "flex", alignItems: "center", gap: 16 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                               <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{u.email}</span>

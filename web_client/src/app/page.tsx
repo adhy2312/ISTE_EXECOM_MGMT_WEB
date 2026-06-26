@@ -124,7 +124,7 @@ export default function HomePage() {
   return (
     <div ref={containerRef} style={{ padding: "24px 20px 100px 20px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Greeting Header */}
-      <header className="stagger-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+      <header className="stagger-in mobile-col" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem", gap: 16 }}>
         <div>
           <h1 className="outfit-font text-gradient" style={{ fontSize: 32, fontWeight: 800 }}>
             Good morning, {user.fullName.split(" ")[0]}

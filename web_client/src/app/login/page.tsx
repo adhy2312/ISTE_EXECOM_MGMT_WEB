@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { UserRole } from "@/types/models";
-import { Zap, CheckSquare, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Zap, CheckSquare, ShieldCheck, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import gsap from "gsap";
 
 const ROOT_ADMIN = "adhithyamohans.b24ec1205@mbcet.ac.in";
@@ -42,6 +42,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [mode, setMode] = useState<LoginMode>("execom");
   const [modeError, setModeError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const loginAttempted = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const decorRef = useRef<HTMLDivElement>(null);
@@ -300,14 +301,36 @@ export default function LoginPage() {
           </div>
           <div>
             <label style={labelSt}>Password</label>
-            <input
-              type="password" value={password} required
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              style={inputSt}
-              onFocus={(e) => { e.target.style.borderColor = m.color; e.target.style.boxShadow = `0 0 0 3px ${m.color}18`; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"} value={password} required
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{ ...inputSt, paddingRight: 40 }}
+                onFocus={(e) => { e.target.style.borderColor = m.color; e.target.style.boxShadow = `0 0 0 3px ${m.color}18`; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 4
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, marginBottom: 4 }}>

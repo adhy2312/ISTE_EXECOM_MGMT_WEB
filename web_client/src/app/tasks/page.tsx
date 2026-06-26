@@ -63,7 +63,7 @@ export default function KanbanPage() {
     <div style={{ padding: "40px 20px 100px", maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", height: "100vh" }}>
       
       {/* Header section */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
+      <header className="mobile-col" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
         <div>
           <h1 className="outfit-font" style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)", marginBottom: 8 }}>
             Task Board
