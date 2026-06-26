@@ -249,7 +249,7 @@ export default function VaultPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Type</label>
-                  <select required value={newResource.type} onChange={e => setNewResource({...newResource, type: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                  <select required value={newResource.type} onChange={e => setNewResource({...newResource, type: e.target.value as "link" | "folder" | "pdf" | "doc" | "sop"})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
                     <option value="link">Link</option>
                     <option value="folder">Folder</option>
                     <option value="pdf">PDF</option>
@@ -259,7 +259,7 @@ export default function VaultPage() {
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "var(--text-secondary)" }}>Category</label>
-                  <select required value={newResource.category} onChange={e => setNewResource({...newResource, category: e.target.value as any})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
+                  <select required value={newResource.category} onChange={e => setNewResource({...newResource, category: e.target.value as "links" | "documents" | "sops" | "assets"})} style={{ width: "100%", padding: 12, borderRadius: 10, border: "1.5px solid var(--border-strong)", fontSize: 14 }}>
                     <option value="links">Links/Drives</option>
                     <option value="documents">Documents</option>
                     <option value="sops">SOPs</option>
