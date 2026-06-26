@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
 import { UserRole } from "@/types/models";
 import gsap from "gsap";
-import { Bell, Megaphone, Info, CheckCircle2, AlertTriangle, AlertCircle, X, Plus } from "lucide-react";
+import { Bell, Megaphone, Info, CheckCircle2, AlertTriangle, AlertCircle, X, Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ const TYPE_CONFIG = {
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
-  const { notifications, unreadCount, isLoading, markAllRead, createAnnouncement } = useNotificationsStore();
+  const { notifications, unreadCount, isLoading, markAllRead, createAnnouncement, deleteAnnouncement } = useNotificationsStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", body: "", type: "info" as "info" | "success" | "warning" | "error" });
@@ -198,9 +198,19 @@ export default function NotificationsPage() {
                       )}
                     </div>
                     <p style={{ fontSize: 14, color: "var(--text-secondary)", fontWeight: 500, marginTop: 4, lineHeight: 1.5 }}>{notif.body}</p>
-                    <p style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginTop: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                      {notif.createdAt ? new Date((notif.createdAt as unknown as { seconds: number }).seconds * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Just now"}
-                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 8 }}>
+                      <p style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        {notif.createdAt ? new Date((notif.createdAt as unknown as { seconds: number }).seconds * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Just now"}
+                      </p>
+                      {isAdmin && (
+                        <button 
+                          onClick={() => deleteAnnouncement(notif.id)}
+                          style={{ background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", padding: 4 }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );

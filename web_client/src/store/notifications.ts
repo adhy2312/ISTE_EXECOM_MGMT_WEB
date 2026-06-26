@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import {
   collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp,
-  updateDoc, doc, arrayUnion
+  updateDoc, doc, arrayUnion, deleteDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { AppNotification } from '@/types/models';
@@ -13,6 +13,7 @@ interface NotificationsState {
   subscribeToNotifications: (userId: string) => () => void;
   markAllRead: (userId: string) => Promise<void>;
   createAnnouncement: (title: string, body: string, type: AppNotification['type']) => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
@@ -56,5 +57,9 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       createdAt: serverTimestamp(),
       readBy: [],
     });
+  },
+
+  deleteAnnouncement: async (id: string) => {
+    await deleteDoc(doc(db, 'notifications', id));
   },
 }));
